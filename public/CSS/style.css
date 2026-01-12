@@ -1,0 +1,107 @@
+body {
+    background-color: #fdf6c3; /* Jaune très clair */
+    font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+    text-align: center;
+    padding: 20px;
+}
+
+h1 { font-size: 3rem; margin-bottom: 30px; }
+
+.main-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Grille 5x5 */
+.student-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    background: transparent;
+}
+
+.student-slot {
+    background: white;
+    border: 2px solid #333;
+    width: 100px;
+    padding: 5px;
+}
+
+.placeholder-img {
+    height: 80px;
+    background: #f0f0f0; /* À remplacer par vos icônes plus tard */
+}
+
+/* Sidebar & Boutons */
+.sidebar { width: 300px; display: flex; flex-direction: column; gap: 40px; }
+
+.prof-space input {
+    display: block;
+    width: 100%;
+    margin: 5px 0;
+    padding: 10px;
+    border: 2px solid #333;
+}
+
+.cat-btn {
+    display: block;
+    margin: 10px 0;
+    padding: 15px;
+    border: 2px solid #333;
+    border-radius: 10px;
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    font-size: 1.5rem;
+    box-shadow: 2px 2px 0px #000;
+}
+
+/* Couleurs spécifiques */
+.cat-orange { background-color: #ffb347; }
+.cat-coral  { background-color: #ff866d; }
+.cat-green  { background-color: #90ee90; }
+.cat-pink   { background-color: #f4b6d9; }
+
+.cat-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+
+/* --- RESPONSIVE TABLETTE --- */
+
+/* Quand l'écran fait moins de 1024px (Tablette paysage ou petit PC) */
+@media (max-width: 1024px) {
+    .main-container {
+        flex-direction: column; /* La sidebar passe sous la grille */
+        align-items: center;
+    }
+
+    .sidebar {
+        width: 100%;
+        margin-top: 40px;
+    }
+
+    .student-grid {
+        grid-template-columns: repeat(4, 1fr); /* On passe à 4 colonnes */
+    }
+}
+
+/* Quand l'écran fait moins de 768px (Tablette portrait) */
+@media (max-width: 768px) {
+    .student-grid {
+        grid-template-columns: repeat(3, 1fr); /* On passe à 3 colonnes */
+        gap: 15px;
+    }
+
+    .student-slot {
+        width: 120px; /* On agrandit les cases pour les petits doigts ! */
+        padding: 15px;
+    }
+
+    h1 { font-size: 2rem; }
+
+    .cat-btn {
+        font-size: 1.2rem;
+        padding: 20px; /* Plus facile à toucher sur tablette */
+    }
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeux Logico mathématiques</title>
+    <link rel="stylesheet" href="/CSS/style.css">
+</head>
+<body>
+<h1>Jeux Logico mathématiques</h1>
+
+<div class="main-container">
+    <section class="student-grid" id="studentGrid">
+    </section>
+
+    <aside class="sidebar">
+        <div class="prof-space">
+            <h3>Espace maîtres(ses)</h3>
+            <form id="loginForm">
+                <input type="text" placeholder="Identifiant">
+                <input type="password" placeholder="Mot de passe">
+                <button type="submit" class="cat-btn" style="font-size: 1rem; background: white;">Se connecter</button>
+            </form>
+            <a href="/sign-in">Créer un compte</a>
+        </div>
+
+        <nav class="categories-nav">
+            <a href="/exercises/classification" class="cat-btn cat-orange">Classification</a>
+            <a href="/exercises/combinatoire" class="cat-btn cat-coral">Combinatoire</a>
+            <a href="/exercises/seriation" class="cat-btn cat-green">Sériation</a>
+            <a href="/exercises/conservation" class="cat-btn cat-pink">Conservation</a>
+        </nav>
+    </aside>
+</div>
+
+<script src="/js/home-client.js"></script>
+</body>
+</html>
