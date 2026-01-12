@@ -1,0 +1,28 @@
+{
+  "name": "ma-metier",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/KT539/MA-metier#readme",
+  "bugs": {
+    "url": "https://github.com/KT539/MA-metier/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KT539/MA-metier.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "dependencies": {
+    "cors": "^2.8.5",
+    "sqlite3": "^5.1.7"
+  }
+}
