@@ -5,13 +5,12 @@ import { fileURLToPath } from 'url';
 const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Route pour servir la page d'accueil
+// Route to home page
 router.get('/', (req, res) => {
-    // On remonte d'un cran pour aller dans /public
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// API temporaire pour simuler les élèves (en attendant SQLite)
+// Mock API to temporarily simulate students
 router.get('/api/students', (req, res) => {
     const fakeStudents = [
         { id: 1, prenom: "Lucas" },
