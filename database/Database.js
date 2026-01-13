@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // Définition du chemin pour les images
-const dossierStatic = path.join(__dirname, 'database');
+const dossierStatic = path.join(__dirname, 'public');
 app.use(express.static(dossierStatic));
 
 // Connexion à la base de données
@@ -20,7 +20,7 @@ const db = new sqlite3.Database('./ecole_echallens.db', (err) => {
 });
 
 // Chemin vers le dossier des animaux
-const images_animaux = path.join(__dirname, 'database', 'animaux page accueil PNG');
+const images_animaux = path.join(__dirname, 'images', 'animaux page accueil PNG');
 
 // --- ROUTE 1 : AJOUTER UN ÉLÈVE ---
 app.post('/api/add-student', (req, res) => {
@@ -39,7 +39,7 @@ app.post('/api/add-student', (req, res) => {
         );
 
         // 2. Vérifier en BDD les animaux déjà pris
-        const sqlCheck = `SELECT animal_image FROM students`;
+        const sqlCheck = `SELECT animal_image FROM student`;
 
         db.all(sqlCheck, [], (dbErr, rows) => {
             if (dbErr) return res.status(500).json({ error: dbErr.message });
@@ -59,9 +59,9 @@ app.post('/api/add-student', (req, res) => {
             const animalChoisi = animauxDisponibles[Math.floor(Math.random() * animauxDisponibles.length)];
 
             // 5. Insertion des valeurs
-            const sqlInsert = `INSERT INTO students (teacher_id, first_name, animal_image) VALUES (?, ?, ?)`;
+            const sqlInsertStudent = `INSERT INTO student (teacher_id, first_name, animal_image) VALUES (?, ?, ?)`;
 
-            db.run(sqlInsert, [teacherId, firstName, animalChoisi], function(insertErr) {
+            db.run(sqlInsertStudent, [teacherId, firstName, animalChoisi], function(insertErr) {
                 if (insertErr) return res.status(500).json({ error: insertErr.message });
 
                 // on renvoie les infos au frontend pour l'affichage immédiat
@@ -76,8 +76,32 @@ app.post('/api/add-student', (req, res) => {
     });
 });
 
-// --- ROUTE 2 : MISE À JOUR DE LA PROGRESSION ---
+// sign_in
 
+// Create login prof
+app.post('/api/add-teacher', (req, res) => {
+    const { username, password_hash } = req.body;
+    const sqlInsertTeacher = `INSERT INTO teacher (username, password_hash) VALUES (?, ?)`;
+    db.run(sqlInsertTeacher, [username, password_hash], function(insertErr) {
+        if (insertErr) return res.status(500).json({ error: insertErr.message });
+    });
+});
+
+// login
+
+// Get login prof
+app.get('/api/teachers', (req, res) => {
+    const {entry_username, entry_password} = req.body;
+    const sqlGetTeacher = `SELECT username, password_hash FROM teacher WHERE username = ? AND password_hash = ?`;
+    db.get(sqlGetTeacher, [entry_username, entry_password], (dbErr, rows) => {
+        if (dbErr) return res.status(500).json({error: dbErr.message});
+    });
+});
+// Get student
+app.get('/api/teachers/', (req, res) => {
+
+})
+// --- ROUTE 2 : MISE À JOUR DE LA PROGRESSION ---
 app.post('/api/update-progress', (req, res) => {
     const { studentId, moduleName, levelNumber } = req.body;
 
