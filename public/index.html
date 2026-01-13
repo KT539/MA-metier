@@ -15,11 +15,14 @@
         <div class="prof-space">
             <h3>Espace maîtres(ses)</h3>
             <form id="loginForm">
-                <input type="text" placeholder="Identifiant">
-                <input type="password" placeholder="Mot de passe">
+                <input type="text" id="input-user" placeholder="Identifiant">
+                <input type="password" id="input-pass" placeholder="Mot de passe">
                 <button type="submit" class="cat-btn" style="font-size: 1rem; background: white;">Se connecter</button>
             </form>
-            <button type="submit" class="cat-btn" style="font-size: 1rem; background: white;">Créer un compte</button>
+            <button type="button" id="btn-create-account" class="cat-btn" style="font-size: 1rem; background: white; margin-top: 10px;">
+                Créer un compte
+            </button>
+            <script src="/js/sign_in.js"></script>
         </div>
 
         <nav class="categories-nav">

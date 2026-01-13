@@ -78,15 +78,25 @@ app.post('/api/add-student', (req, res) => {
 
 // sign_in
 
-// Create login prof
+// Create login prof (Inscription)
 app.post('/api/add-teacher', (req, res) => {
-    const { username, password_hash } = req.body;
+    const { username, password } = req.body;
+
+    // NOTE DE SÉCURITÉ : Il faudrait hacher le mot de passe
     const sqlInsertTeacher = `INSERT INTO teacher (username, password_hash) VALUES (?, ?)`;
-    db.run(sqlInsertTeacher, [username, password_hash], function(insertErr) {
-        if (insertErr) return res.status(500).json({ error: insertErr.message });
+
+    db.run(sqlInsertTeacher, [username, password], function(insertErr) {
+        if (insertErr) {
+            // Si l'utilisateur existe déjà ou autre erreur
+            return res.status(500).json({ error: insertErr.message });
+        }
+        res.json({
+            success: true,
+            message: "Compte enseignant créé !",
+            id: this.lastID
+        });
     });
 });
-
 // login
 
 // Get login prof
