@@ -1,161 +1,123 @@
-const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
+import sqlite3 from 'sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const app = express();
-app.use(bodyParser.json());
-app.use(cors());
-
-// Définition du chemin pour les images
-const dossierStatic = path.join(__dirname, 'public');
-app.use(express.static(dossierStatic));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Connexion à la base de données
-const db = new sqlite3.Database('./ecole_echallens.db', (err) => {
-    if (err) console.error(err.message);
-    console.log('Connecté à la base de données SQLite.');
+const dbPath = path.resolve(__dirname, 'ecole_echallens.db');
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) console.error("Erreur connexion BD:", err.message);
+    else console.log('Connecté à la base de données SQLite.');
 });
 
-// Chemin vers le dossier des animaux
-const images_animaux = path.join(__dirname, 'images', 'animaux page accueil PNG');
+// --- FONCTIONS AUTHENTIFICATION ---
 
-// --- ROUTE 1 : AJOUTER UN ÉLÈVE ---
-app.post('/api/add-student', (req, res) => {
-    const { teacherId, firstName } = req.body;
+export const createTeacher = (username, password) => {
+    return new Promise((resolve, reject) => {
+        const sql = `INSERT INTO teacher (username, password_hash) VALUES (?, ?)`;
+        db.run(sql, [username, password], function(err) {
+            if (err) reject(err);
+            else resolve(this.lastID);
+        });
+    });
+};
 
-    // 1. Lire le dossier
-    fs.readdir(images_animaux, (err, files) => {
-        if (err) {
-            console.error("Erreur lecture dossier:", err.message);
-            return res.status(500).json({ error: "Impossible de lire le dossier images" });
-        }
+export const getTeacherByCredentials = (username, password) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT id, username FROM teacher WHERE username = ? AND password_hash = ?`;
+        db.get(sql, [username, password], (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+        });
+    });
+};
 
-        // Séléction des images dans le dossier (PNG ou JPG)
-        const touteslesImages = files.filter(file =>
-            file.toLowerCase().endsWith('.png') || file.toLowerCase().endsWith('.jpg')
-        );
+// --- FONCTIONS CLASSES ---
 
-        // 2. Vérifier en BDD les animaux déjà pris
-        const sqlCheck = `SELECT animal_image FROM student`;
+export const getClassesByTeacher = (teacherId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM classes WHERE teacher_id = ?`;
+        db.all(sql, [teacherId], (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+};
 
-        db.all(sqlCheck, [], (dbErr, rows) => {
-            if (dbErr) return res.status(500).json({ error: dbErr.message });
+export const createClass = (name, teacherId) => {
+    return new Promise((resolve, reject) => {
+        // 1. On vérifie l'existence ou non de la classe
+        const checkSql = `SELECT id FROM classes WHERE name = ? AND teacher_id = ?`;
 
-            const animauxPris = rows.map(row => row.animal_image);
+        db.get(checkSql, [name, teacherId], (err, row) => {
+            if (err) return reject(err);
 
-            // 3. Trouver les images disponibles
-            const animauxDisponibles = touteslesImages.filter(animal => !animauxPris.includes(animal));
-
-            if (animauxDisponibles.length === 0) {
-                return res.status(400).json({
-                    error: "Plus d'images disponibles ! Ajoutez de nouveaux fichiers dans le dossier."
-                });
+            if (row) {
+                // Si une ligne est trouvée -> on rejette
+                return reject(new Error("Cette classe existe déjà."));
             }
 
-            // 4. Choix aléatoire de l'image
-            const animalChoisi = animauxDisponibles[Math.floor(Math.random() * animauxDisponibles.length)];
-
-            // 5. Insertion des valeurs
-            const sqlInsertStudent = `INSERT INTO student (teacher_id, first_name, animal_image) VALUES (?, ?, ?)`;
-
-            db.run(sqlInsertStudent, [teacherId, firstName, animalChoisi], function(insertErr) {
-                if (insertErr) return res.status(500).json({ error: insertErr.message });
-
-                // on renvoie les infos au frontend pour l'affichage immédiat
-                res.json({
-                    id: this.lastID,
-                    firstName,
-                    animalImage: animalChoisi,
-                    message: "Élève ajouté avec succès !"
-                });
+            // Sinon on la crée
+            const insertSql = `INSERT INTO classes (name, teacher_id) VALUES (?, ?)`;
+            db.run(insertSql, [name, teacherId], function(err) {
+                if (err) return reject(err);
+                resolve({ id: this.lastID, name });
             });
         });
     });
-});
+};
 
-// sign_in
-
-// Create login prof (Inscription)
-app.post('/api/add-teacher', (req, res) => {
-    const { username, password } = req.body;
-
-    // NOTE DE SÉCURITÉ : Il faudrait hacher le mot de passe
-    const sqlInsertTeacher = `INSERT INTO teacher (username, password_hash) VALUES (?, ?)`;
-
-    db.run(sqlInsertTeacher, [username, password], function(insertErr) {
-        if (insertErr) {
-            // Si l'utilisateur existe déjà ou autre erreur
-            return res.status(500).json({ error: insertErr.message });
-        }
-        res.json({
-            success: true,
-            message: "Compte enseignant créé !",
-            id: this.lastID
+export const toggleClassStatus = (classId, isActive) => {
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE classes SET is_active = ? WHERE id = ?`;
+        db.run(sql, [isActive ? 1 : 0, classId], function(err) {
+            if (err) reject(err);
+            else resolve({ success: true });
         });
     });
-});
-// login
+};
 
-// Get login prof
-app.get('/api/teachers', (req, res) => {
-    const {entry_username, entry_password} = req.body;
-    const sqlGetTeacher = `SELECT username, password_hash FROM teacher WHERE username = ? AND password_hash = ?`;
-    db.get(sqlGetTeacher, [entry_username, entry_password], (dbErr, rows) => {
-        if (dbErr) return res.status(500).json({error: dbErr.message});
+// --- FONCTIONS ÉLÈVES ---
+
+export const getStudentsByClass = (classId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM student WHERE class_id = ?`;
+        db.all(sql, [classId], (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
     });
-});
-// Get student
-app.get('/api/teachers/', (req, res) => {
+};
 
-})
-// --- ROUTE 2 : MISE À JOUR DE LA PROGRESSION ---
-app.post('/api/update-progress', (req, res) => {
-    const { studentId, moduleName, levelNumber } = req.body;
-
-    const checkSql = `SELECT success_count, is_completed FROM progress 
-                      WHERE student_id = ? AND module_name = ? AND level_number = ?`;
-
-    db.get(checkSql, [studentId, moduleName, levelNumber], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        if (!row) {
-            // Premier succès : initialisation à 1
-            const insertSql = `INSERT INTO progress (student_id, module_name, level_number, success_count, is_completed) 
-                               VALUES (?, ?, ?, 1, 0)`;
-            db.run(insertSql, [studentId, moduleName, levelNumber], function(err) {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json({ success: true, count: 1, completed: false, bravo: true });
-            });
-        } else {
-            // Succès suivants, incrémentation
-            if (row.is_completed) {
-                return res.json({ success: true, message: "Niveau déjà terminé", completed: true });
-            }
-
-            let newCount = row.success_count + 1;
-
-            // Règle des 5 réussites validée ici
-            let completed = newCount >= 5 ? 1 : 0;
-
-            const updateSql = `UPDATE progress SET success_count = ?, is_completed = ? 
-                               WHERE student_id = ? AND module_name = ? AND level_number = ?`;
-
-            db.run(updateSql, [newCount, completed, studentId, moduleName, levelNumber], function(err) {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json({
-                    success: true,
-                    count: newCount,
-                    completed: !!completed,
-                    bravo: true // Le frontend utilisera ça pour afficher "BRAVO!"
-                });
-            });
-        }
+export const createStudent = (firstName, animalImage, classId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `INSERT INTO student (name, animal_image, class_id) VALUES (?, ?, ?)`;
+        db.run(sql, [firstName, animalImage, classId], function(err) {
+            if (err) reject(err);
+            else resolve(this.lastID);
+        });
     });
-});
+};
 
-app.listen(3000, () => {
-    console.log('Serveur démarré sur le port 3000');
-});
+// --- FONCTIONS PROGRESSION ---
+
+export const getClassProgress = (classId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT s.first_name, p.module_name, p.level_number, p.is_completed 
+            FROM student s
+            LEFT JOIN progress p ON s.id = p.student_id
+            WHERE s.class_id = ?
+        `;
+        db.all(sql, [classId], (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+};
+
+// Exporte l'objet db par défaut si besoin d'accès direct ailleurs,
+// mais on privilégie les fonctions exportées ci-dessus.
+export default db;

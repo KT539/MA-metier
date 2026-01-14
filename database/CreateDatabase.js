@@ -1,7 +1,10 @@
-const sqlite3 = require('sqlite3').verbose();
+import sqlite3 from 'sqlite3';
+
+// On active le mode verbose
+const verboseSqlite = sqlite3.verbose();
 
 // Crée la base de données si pas existante
-const db = new sqlite3.Database('./ecole_echallens.db', (err) => {
+const db = new verboseSqlite.Database('./ecole_echallens.db', (err) => {
     if (err) {
         console.error('Erreur de connexion:', err.message);
     } else {
@@ -27,14 +30,32 @@ db.serialize(() => {
         }
     });
 
+    // Création de la table Classes
+    // is_active détermine si l'interface élève est accessible
+    db.run(`
+        CREATE TABLE IF NOT EXISTS classes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            teacher_id INTEGER,
+            is_active BOOLEAN DEFAULT 0,
+            FOREIGN KEY (teacher_id) REFERENCES teacher(id)
+        )
+        `,(err) => {
+        if (err) {
+            console.error("Erreur création table classes:", err.message);
+        } else {
+            console.log("Table 'classes' prête.");
+        }
+    });
+
     // Création de la table student
     db.run(`
         CREATE TABLE IF NOT EXISTS student (
                id INTEGER PRIMARY KEY AUTOINCREMENT,
                name TEXT NOT NULL,
                animal_image IMAGE,
-               teacher_username TEXT NOT NULL,
-               FOREIGN KEY (teacher_username) REFERENCES teacher(username) ON UPDATE CASCADE
+               class_id INTEGER,
+               FOREIGN KEY (class_id) REFERENCES classes(id) ON UPDATE CASCADE
         )`, (err) => {
         if (err) {
             console.error("Erreur création table student:", err.message);
@@ -49,8 +70,8 @@ db.serialize(() => {
                id INTEGER PRIMARY KEY AUTOINCREMENT,
                module_name TEXT,
                level_number INT,
-               success_count INT,
-               is_completed BOOL,
+               success_count INT DEFAULT 0,
+               is_completed BOOLEAN DEFAULT 0,
                student_id INT,
                FOREIGN KEY (student_id) REFERENCES student(id) ON UPDATE CASCADE
         )`, (err) => {

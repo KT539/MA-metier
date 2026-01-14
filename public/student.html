@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>Espace Élève</title>
+    <link rel="stylesheet" href="/CSS/style.css">
+</head>
+<body>
+<div id="setup-screen">
+    <h2>Configuration (A faire par l'enseignant)</h2>
+    <select id="student-class-select"></select>
+    <button onclick="launchStudentMode()">Lancer le mode classe</button>
+</div>
+
+<div id="student-app" style="display:none;">
+    <h1 id="welcome-msg">Qui es-tu ?</h1>
+
+    <div class="student-grid" id="student-grid"></div>
+
+    <div id="exercise-menu" class="hidden" style="margin-top: 50px;">
+        <h2>Bonjour <span id="student-name"></span> ! Choisis ton activité :</h2>
+        <nav class="categories-nav">
+            <a href="#" onclick="startExercise('classification')" class="cat-btn cat-orange">Classification</a>
+            <a href="#" onclick="startExercise('seriation')" class="cat-btn cat-green">Sériation</a>
+            <a href="#" onclick="startExercise('conservation')" class="cat-btn cat-pink">Conservation</a>
+        </nav>
+        <button onclick="logoutStudent()" style="margin-top:20px;">Changer d'élève</button>
+    </div>
+</div>
+
+<script>
+    // Charger les classes pour le setup initial
+    // Une fois la classe choisie, on cache le setup et on montre la grille
+
+    let currentClassId = null;
+
+    async function init() {
+        // Récupérer les classes actives uniquement ? Ou toutes et on vérifie ?
+        // Pour l'exemple, on récupère via l'enseignant (il faudrait stocker l'ID enseignant qque part ou lister toutes les classes)
+        const teacherId = localStorage.getItem('teacherId');
+        if(teacherId) {
+            const res = await fetch(`/api/classes/${teacherId}`);
+            const classes = await res.json();
+            // Remplir le select...
+        }
+    }
+
+    async function launchStudentMode() {
+        const select = document.getElementById('student-class-select');
+        currentClassId = select.value;
+
+        // Vérifier si la classe est active
+        // Si oui :
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('student-app').style.display = 'block';
+        loadStudentsForGrid();
+    }
+
+    async function loadStudentsForGrid() {
+        const res = await fetch(`/api/students/${currentClassId}`);
+        const students = await res.json();
+        const grid = document.getElementById('student-grid');
+        grid.innerHTML = '';
+
+        students.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'student-slot';
+            div.innerHTML = `
+                    <img src="/images/${s.animal_image}" style="width:80%">
+                    <p>${s.first_name}</p>
+                `;
+            div.onclick = () => selectStudent(s);
+            grid.appendChild(div);
+        });
+    }
+
+    function selectStudent(student) {
+        document.getElementById('student-grid').style.display = 'none';
+        document.getElementById('welcome-msg').style.display = 'none';
+        document.getElementById('exercise-menu').style.display = 'block';
+        document.getElementById('student-name').textContent = student.first_name;
+        // Stocker l'ID étudiant pour la progression
+        sessionStorage.setItem('currentStudentId', student.id);
+    }
+
+    function startExercise(type) {
+        // Rediriger vers la page d'exercice existante
+        window.location.href = `/exercises/${type}`;
+    }
+
+    function logoutStudent() {
+        document.getElementById('exercise-menu').style.display = 'none';
+        document.getElementById('student-grid').style.display = 'grid';
+        document.getElementById('welcome-msg').style.display = 'block';
+        sessionStorage.removeItem('currentStudentId');
+    }
+
+    init();
+</script>
+</body>
+</html>
