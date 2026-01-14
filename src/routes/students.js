@@ -19,7 +19,7 @@ const images_animaux = path.join(__dirname, 'images');
 // Récupérer les élèves d'une classe
 router.get('/:classId', async (req, res) => {
     try {
-        const students = await db.getStudentsByClass(req.params.classId);
+        const students = await getStudentsByClass(req.params.classId);
         res.json(students);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -81,7 +81,7 @@ router.post('/', async (req, res) => {
 // Récupérer la progression d'une classe
 router.get('/progress/:classId', async (req, res) => {
     try {
-        const progress = await db.getClassProgress(req.params.classId);
+        const progress = await getClassProgress(req.params.classId);
         res.json(progress);
     } catch (err) {
         res.status(500).json({ error: err.message });
