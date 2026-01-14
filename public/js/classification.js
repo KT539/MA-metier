@@ -30,6 +30,7 @@ function loadexercises(sectionid, numberOfCircles) {
     }
 }
 
+
 //calls function for each row of exercises
 loadexercises('exercises-grid-pareils', 30)
 loadexercises('exercises-grid-commun', 30)

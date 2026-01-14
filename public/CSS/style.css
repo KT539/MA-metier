@@ -77,7 +77,6 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
 
 .cat-btn:active { transform: translate(2px, 2px); box-shadow: none; }
 
-
 /* Responsive */
 @media (max-width: 1024px) {
     .main-container {

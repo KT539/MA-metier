@@ -1,0 +1,79 @@
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>text-to-speech-test</title>
+    <link rel="stylesheet" href="/public/CSS/style.css">
+</head>
+<style>
+    .speak-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.speak-btn:hover {
+    background-color: #357abd;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.speak-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.speaker-emoji {
+    font-size: 1.2rem;
+}
+
+.ttscontainer{ display: flex; flex-wrap: wrap; gap: 15px; padding: 20px; max-width: 60%; }
+
+</style>
+<body>
+
+<div class="ttscontainer">
+    <button class="speak-btn" onclick="speak('texttospeechquestion')">
+        <span class="speaker-emoji">🔊</span> 
+    </button>
+    <p id="texttospeechquestion">Les dessins, sont-ils pareils ou différents ? Clique sur le bon symbole.</p>
+</div>    
+
+<div class="ttscontainer">
+    <button class="speak-btn" onclick="speak('texttospeechquestion')">
+        <span class="speaker-emoji">🔊</span> 
+    </button>
+    <p id="texttospeechquestion2">Ces deux images vont ensemble car elles ont… Clique sur le bon bouton.</p>
+</div> 
+
+
+
+<script src="/public/js/text-to-speech.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
