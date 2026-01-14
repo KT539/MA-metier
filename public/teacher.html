@@ -134,16 +134,16 @@
 
     async function createStudent() {
         const nameInput = document.getElementById('new-student-name');
-        const firstName = nameInput.value.trim();
+        const name = nameInput.value.trim();
 
-        if (!firstName) return alert("Veuillez mettre un prénom.");
+        if (!name) return alert("Veuillez mettre un prénom.");
         if (!currentClassId) return alert("Aucune classe sélectionnée.");
 
         try {
             const res = await fetch('/api/students', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ firstName, classId: currentClassId })
+                body: JSON.stringify({ name, classId: currentClassId })
             });
 
             if (res.ok) {

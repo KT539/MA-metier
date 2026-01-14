@@ -3,44 +3,102 @@
 <head>
     <title>Espace Élève</title>
     <link rel="stylesheet" href="/CSS/style.css">
+    <style>
+        /* Ajout de style pour que la grille soit visible et jolie */
+        .student-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .student-slot {
+            width: 150px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            background-color: white;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .student-slot:hover {
+            transform: scale(1.05);
+            border-color: #4CAF50;
+            background-color: #f9fff9;
+        }
+        .student-slot img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+        .student-slot p {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin: 0;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
-<div id="setup-screen">
-    <h2>Configuration (A faire par l'enseignant)</h2>
-    <select id="student-class-select"></select>
-    <button onclick="launchStudentMode()">Lancer le mode classe</button>
+
+<div id="setup-screen" style="max-width: 600px; margin: 50px auto; text-align: center;">
+    <h2>Configuration (Enseignant)</h2>
+    <p>Sélectionnez la classe pour cette tablette/ordinateur :</p>
+    <select id="student-class-select" style="padding: 10px; font-size: 16px; margin-bottom: 20px; min-width: 200px;">
+    </select>
+    <br>
+    <button class="cat-btn cat-green" onclick="launchStudentMode()">Lancer le mode classe</button>
 </div>
 
-<div id="student-app" style="display:none;">
+<div id="student-app" style="display:none; text-align: center;">
     <h1 id="welcome-msg">Qui es-tu ?</h1>
 
     <div class="student-grid" id="student-grid"></div>
 
     <div id="exercise-menu" class="hidden" style="margin-top: 50px;">
-        <h2>Bonjour <span id="student-name"></span> ! Choisis ton activité :</h2>
-        <nav class="categories-nav">
+        <h2>Bonjour <span id="student-name" style="color:#e67e22;"></span> ! Choisis ton activité :</h2>
+
+        <nav class="categories-nav" style="display: flex; gap: 20px; justify-content: center; margin-top: 30px;">
             <a href="#" onclick="startExercise('classification')" class="cat-btn cat-orange">Classification</a>
             <a href="#" onclick="startExercise('seriation')" class="cat-btn cat-green">Sériation</a>
             <a href="#" onclick="startExercise('conservation')" class="cat-btn cat-pink">Conservation</a>
         </nav>
-        <button onclick="logoutStudent()" style="margin-top:20px;">Changer d'élève</button>
+
+        <button onclick="logoutStudent()" style="margin-top:50px; background: #999; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Changer d'élève</button>
     </div>
 </div>
 
 <script>
-    // Charger les classes pour le setup initial
-    // Une fois la classe choisie, on cache le setup et on montre la grille
-
     let currentClassId = null;
 
     async function init() {
-        // Récupérer les classes actives uniquement ? Ou toutes et on vérifie ?
-        // Pour l'exemple, on récupère via l'enseignant (il faudrait stocker l'ID enseignant qque part ou lister toutes les classes)
         const teacherId = localStorage.getItem('teacherId');
-        if(teacherId) {
+
+        // Si pas de teacherId, on ne peut pas charger la liste
+        if(!teacherId) {
+            alert("Erreur : Aucun enseignant connecté sur cet appareil. Veuillez vous connecter d'abord sur la page Enseignant.");
+            return;
+        }
+
+        try {
+            // Récupérer les classes du prof
             const res = await fetch(`/api/classes/${teacherId}`);
             const classes = await res.json();
-            // Remplir le select...
+
+            const select = document.getElementById('student-class-select');
+            select.innerHTML = '<option value="">-- Choisir une classe --</option>'; // Option par défaut
+
+            classes.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.text = c.name;
+                select.add(opt);
+            });
+        } catch (e) {
+            console.error("Erreur init:", e);
         }
     }
 
@@ -48,48 +106,69 @@
         const select = document.getElementById('student-class-select');
         currentClassId = select.value;
 
-        // Vérifier si la classe est active
-        // Si oui :
+        if (!currentClassId) {
+            alert("Veuillez sélectionner une classe avant de lancer.");
+            return;
+        }
+
+        // On cache le setup et on lance l'app
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('student-app').style.display = 'block';
+
         loadStudentsForGrid();
     }
 
     async function loadStudentsForGrid() {
-        const res = await fetch(`/api/students/${currentClassId}`);
-        const students = await res.json();
-        const grid = document.getElementById('student-grid');
-        grid.innerHTML = '';
+        try {
+            const res = await fetch(`/api/students/${currentClassId}`);
+            const students = await res.json();
+            const grid = document.getElementById('student-grid');
+            grid.innerHTML = '';
 
-        students.forEach(s => {
-            const div = document.createElement('div');
-            div.className = 'student-slot';
-            div.innerHTML = `
-                    <img src="/images/${s.animal_image}" style="width:80%">
-                    <p>${s.first_name}</p>
+            if (students.length === 0) {
+                grid.innerHTML = "<p>Aucun élève trouvé dans cette classe.</p>";
+                return;
+            }
+
+            students.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'student-slot';
+
+                // Utilisation de name (base de données) et ajout fallback image
+                const imgSrc = s.animal_image ? `/images/${s.animal_image}` : '/images/chat_jaune.png';
+
+                div.innerHTML = `
+                    <img src="${imgSrc}" alt="${s.name}">
+                    <p>${s.name}</p>
                 `;
-            div.onclick = () => selectStudent(s);
-            grid.appendChild(div);
-        });
+                div.onclick = () => selectStudent(s);
+                grid.appendChild(div);
+            });
+        } catch (e) {
+            console.error("Erreur chargement élèves:", e);
+        }
     }
 
     function selectStudent(student) {
         document.getElementById('student-grid').style.display = 'none';
         document.getElementById('welcome-msg').style.display = 'none';
+
         document.getElementById('exercise-menu').style.display = 'block';
+        document.getElementById('exercise-menu').classList.remove('hidden'); // Au cas où la classe hidden CSS cache tout
+
         document.getElementById('student-name').textContent = student.first_name;
-        // Stocker l'ID étudiant pour la progression
+
         sessionStorage.setItem('currentStudentId', student.id);
     }
 
     function startExercise(type) {
-        // Rediriger vers la page d'exercice existante
+        // Rediriger vers la page d'exercice
         window.location.href = `/exercises/${type}`;
     }
 
     function logoutStudent() {
         document.getElementById('exercise-menu').style.display = 'none';
-        document.getElementById('student-grid').style.display = 'grid';
+        document.getElementById('student-grid').style.display = 'flex'; // Remettre en flex pour la grille
         document.getElementById('welcome-msg').style.display = 'block';
         sessionStorage.removeItem('currentStudentId');
     }
