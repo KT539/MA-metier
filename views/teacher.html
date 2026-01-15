@@ -130,27 +130,26 @@
             link.style.display = "none";
         }
     }
-    // --- 2. GESTION DES ÉLÈVES (Ce qui manquait) ---
+    // --- 2. GESTION DES ÉLÈVES ---
 
     async function createStudent() {
         const nameInput = document.getElementById('new-student-name');
-        const firstName = nameInput.value.trim();
+        const name = nameInput.value.trim();
 
-        if (!firstName) return alert("Veuillez mettre un prénom.");
+        if (!name) return alert("Veuillez mettre un prénom.");
         if (!currentClassId) return alert("Aucune classe sélectionnée.");
 
         try {
             const res = await fetch('/api/students', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ firstName, classId: currentClassId })
+                body: JSON.stringify({ name, classId: currentClassId })
             });
 
             if (res.ok) {
                 nameInput.value = "";
                 loadStudents();
             } else {
-                // MODIFICATION ICI : On lit le message d'erreur du serveur
                 const data = await res.json();
                 alert("Erreur : " + (data.error || "Problème inconnu"));
             }
@@ -183,9 +182,9 @@
             div.style.textAlign = "center";
             div.style.backgroundColor = "#f9f9f9";
             div.style.borderRadius = "8px";
-
+            // !! adapter taille image car trop petit par rapport à la case
             div.innerHTML = `
-                <img src="/images/${s.animal_image}" alt="Avatar" style="width: 60px; height: 60px; object-fit: contain;">
+                <img src="/images/${s.animal_image}" alt="Avatar" style="width: 198px; height: 140px; object-fit: contain;">
                 <p style="margin: 5px 0 0 0; font-weight: bold;">${s.name}</p>
             `;
             grid.appendChild(div);

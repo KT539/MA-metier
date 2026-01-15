@@ -20,15 +20,15 @@ app.use(express.urlencoded({ extended: true }));
 // (Ces routes servent juste les fichiers HTML, pas de logique métier ici)
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/login.html'));
+    res.sendFile(path.join(__dirname, 'views/login.html'));
 });
 
 app.get('/teacher-dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/teacher.html'));
+    res.sendFile(path.join(__dirname, 'views/teacher.html'));
 });
 
 app.get('/student-area', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/student.html'));
+    res.sendFile(path.join(__dirname, 'views/student.html'));
 });
 
 // --- API ROUTES ---
