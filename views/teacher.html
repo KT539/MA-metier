@@ -130,7 +130,7 @@
             link.style.display = "none";
         }
     }
-    // --- 2. GESTION DES ÉLÈVES (Ce qui manquait) ---
+    // --- 2. GESTION DES ÉLÈVES ---
 
     async function createStudent() {
         const nameInput = document.getElementById('new-student-name');
@@ -150,7 +150,6 @@
                 nameInput.value = "";
                 loadStudents();
             } else {
-                // MODIFICATION ICI : On lit le message d'erreur du serveur
                 const data = await res.json();
                 alert("Erreur : " + (data.error || "Problème inconnu"));
             }
@@ -183,9 +182,9 @@
             div.style.textAlign = "center";
             div.style.backgroundColor = "#f9f9f9";
             div.style.borderRadius = "8px";
-
+            // !! adapter taille image car trop petit par rapport à la case
             div.innerHTML = `
-                <img src="/images/${s.animal_image}" alt="Avatar" style="width: 60px; height: 60px; object-fit: contain;">
+                <img src="/images/${s.animal_image}" alt="Avatar" style="width: 198px; height: 140px; object-fit: contain;">
                 <p style="margin: 5px 0 0 0; font-weight: bold;">${s.name}</p>
             `;
             grid.appendChild(div);
