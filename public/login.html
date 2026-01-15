@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion - École Échallens</title>
+    <link rel="stylesheet" href="/CSS/style.css">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            background: white;
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            box-shadow: 5px 5px 0px #000;
+        }
+        .hidden { display: none; }
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #333;
+            border-radius: 5px;
+        }
+        h2 { margin-top: 0; }
+    </style>
+</head>
+<body>
+<h1>Bienvenue</h1>
+
+<div class="auth-container" id="login-view">
+    <h2>Connexion Enseignant</h2>
+    <input type="text" id="login-user" placeholder="Identifiant">
+    <input type="password" id="login-pass" placeholder="Mot de passe">
+    <button class="cat-btn cat-green" style="width:100%; font-size:1rem;" onclick="login()">Se connecter</button>
+    <p style="margin-top:15px;">Pas de compte ? <a href="#" onclick="toggleView()">Créer un compte</a></p>
+</div>
+
+<div class="auth-container hidden" id="register-view">
+    <h2>Créer un compte</h2>
+    <input type="text" id="reg-user" placeholder="Nouvel Identifiant">
+    <input type="password" id="reg-pass" placeholder="Mot de passe">
+    <button class="cat-btn cat-orange" style="width:100%; font-size:1rem;" onclick="register()">S'inscrire</button>
+    <p style="margin-top:15px;"><a href="#" onclick="toggleView()">Retour connexion</a></p>
+</div>
+
+<script>
+    // Basculer entre Login et Inscription
+    function toggleView() {
+        document.getElementById('login-view').classList.toggle('hidden');
+        document.getElementById('register-view').classList.toggle('hidden');
+    }
+
+    // Fonction de connexion
+    async function login() {
+        const username = document.getElementById('login-user').value;
+        const password = document.getElementById('login-pass').value;
+
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            });
+            const data = await res.json();
+
+            if(data.success) {
+                // On stocke l'ID pour les requêtes futures
+                localStorage.setItem('teacherId', data.teacherId);
+                window.location.href = '/teacher-dashboard';
+            } else {
+                alert("Erreur : " + data.error);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erreur de connexion au serveur.");
+        }
+    }
+
+    // Fonction d'inscription
+    async function register() {
+        const username = document.getElementById('reg-user').value;
+        const password = document.getElementById('reg-pass').value;
+
+        if (!username || !password) {
+            alert("Veuillez remplir tous les champs.");
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Compte créé avec succès ! Vous pouvez vous connecter.");
+                toggleView(); // Retourne à l'écran de connexion
+                // Pré-remplit le champ login pour faciliter l'usage
+                document.getElementById('login-user').value = username;
+            } else {
+                alert("Erreur : " + (data.error || "Impossible de créer le compte."));
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erreur de communication avec le serveur.");
+        }
+    }
+</script>
+</body>
+</html>
