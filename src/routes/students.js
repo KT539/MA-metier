@@ -47,7 +47,6 @@ router.post('/', async (req, res) => {
         );
 
         // 2. Vérifier en BDD les animaux déjà pris
-        // On enveloppe le callback db.all dans une Promise pour pouvoir utiliser 'await' proprement
         const animauxPris = await new Promise((resolve, reject) => {
             db.all(`SELECT animal_image FROM student`, [], (dbErr, rows) => {
                 if (dbErr) reject(dbErr);
