@@ -13,8 +13,6 @@ const __dirname = path.dirname(__filename);
 const dossierStatic = path.join(__dirname, '../../public/images');
 app.use(express.static(dossierStatic));
 
-// Chemin vers le dossier des animaux
-const images_animaux = path.join(__dirname, 'images');
 
 // Récupérer les élèves d'une classe
 router.get('/:classId', async (req, res) => {
