@@ -31,6 +31,10 @@ app.get('/student-area', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/student.html'));
 });
 
+app.get('/classification', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/classification.html'));
+});
+
 // --- API ROUTES ---
 // On utilise les fichiers créés dans src/routes
 
