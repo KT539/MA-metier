@@ -30,8 +30,29 @@ function loadexercises(sectionid, numberOfCircles) {
     }
 }
 
-//calls function for each row of exercises
-loadexercises('exercises-grid-pareils', 30)
-loadexercises('exercises-grid-commun', 30)
-loadexercises('exercises-grid-images', 30)
-loadexercises('exercises-grid-pile', 30)
+//Classifications
+const path = window.location.pathname;
+
+switch (path) {
+    case "/classification":
+        loadexercises('exercises-grid-pareils', 30)
+        loadexercises('exercises-grid-commun', 30)
+        loadexercises('exercises-grid-images', 30)
+        loadexercises('exercises-grid-pile', 30)
+        break;
+        
+    case "/conservation":
+        loadexercises('exercises-bonne-phrase', 20)
+        loadexercises('exercises-trou-phrase', 20)
+        loadexercises('exercises-moins-autant-plus', 20)
+        loadexercises('exercises-bonne-situation', 20)
+        loadexercises('exercises-trou-phrase2', 20)
+        loadexercises('exercises-complete', 20)
+        break;
+}
+
+
+
+
+
+
