@@ -3,7 +3,8 @@ import fs from 'fs';
 import path from 'path';
 const router = express.Router();
 import { fileURLToPath } from 'url';
-import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/Database.js';
+// import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/Sqlite_Deprecated/Database.js';
+import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/LinkWIthDatabaseSql.js';
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -46,7 +47,7 @@ router.post('/', async (req, res) => {
 
         // 2. Vérifier en BDD les animaux déjà pris
         const animauxPris = await new Promise((resolve, reject) => {
-            db.all(`SELECT animal_image FROM student`, [], (dbErr, rows) => {
+            db.query(`SELECT animal_image FROM student`, [], (dbErr, rows) => {
                 if (dbErr) reject(dbErr);
                 else resolve(rows.map(row => row.animal_image));
             });
