@@ -31,7 +31,7 @@ app.get('/student-area', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/student.html'));
 });
 
-app.get('/exercises/combinatoire', (req, res) => {
+app.get('/combinatoire', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/combinatoire.html'));
 });
 
