@@ -18,8 +18,13 @@
 <div id="dashboard-content" style="display:none;">
 
     <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="background: #fff; padding: 10px; border: 2px solid #333;">
+            <label>Vous souhaitez ajouter un nouvel exercice ?</label>
+            <a href="/exercises_creation" target="_blank" class="cat-btn cat-green" id="link-creation-page" style="display:none;">Créer un exercice</a>
+        </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2 id="current-class-title"></h2>
-
         <div style="background: #fff; padding: 10px; border: 2px solid #333;">
             <label>Accès Élèves : </label>
             <button id="toggle-student-btn" class="cat-btn cat-coral" onclick="toggleStudentAccess()">DÉSACTIVÉ</button>
