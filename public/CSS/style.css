@@ -71,7 +71,7 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
 .page-combinatoire .arrow {
     width: 45px;
     height: 45px;
-    background: #39e43f;
+    background: #ff866d;
     clip-path: polygon(100% 0, 0 50%, 100% 100%);
     cursor: pointer;
 }
@@ -84,7 +84,7 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
 .page-combinatoire .section h2 {
     font-size: 1.4rem;
     margin-bottom: 10px;
-    color: #39e43f;
+    color: #ff866d;
     font-weight: bold;
     text-decoration: underline;
 }
