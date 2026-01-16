@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>Espace Enseignant</title>
+    <link rel="stylesheet" href="/CSS/style.css">
+</head>
+<body>
+<h1>Espace Enseignant</h1>
+
+<div id="class-selection">
+    <select id="class-select" onchange="loadClassData()"></select>
+    <input type="text" id="new-class-name" placeholder="Nom nouvelle classe">
+    <button onclick="createClass()">Ajouter Classe</button>
+</div>
+
+<hr>
+
+<div id="dashboard-content" style="display:none;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 id="current-class-title"></h2>
+
+        <div style="background: #fff; padding: 10px; border: 2px solid #333;">
+            <label>Accès Élèves : </label>
+            <button id="toggle-student-btn" class="cat-btn cat-coral" onclick="toggleStudentAccess()">DÉSACTIVÉ</button>
+            <a href="/student-area" target="_blank" class="cat-btn cat-green" id="link-student-view" style="display:none;">Ouvrir Vue Élève</a>
+        </div>
+    </div>
+
+    <h3>Gestion des Élèves</h3>
+    <input type="text" id="new-student-name" placeholder="Prénom de l'élève">
+    <button onclick="createStudent()">Ajouter Élève</button>
+
+    <div class="student-grid" id="prof-student-grid">
+    </div>
+
+    <h3>Tableau de Progression</h3>
+    <table border="1" style="width: 100%; background: white; border-collapse: collapse;">
+        <thead>
+        <tr>
+            <th>Élève</th>
+            <th>Classification</th>
+            <th>Sériation</th>
+            <th>Conservation</th>
+        </tr>
+        </thead>
+        <tbody id="progress-table-body">
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const teacherId = localStorage.getItem('teacherId');
+    let currentClassId = null;
+    let currentClassActive = false;
+
+    // Charger les classes au démarrage
+    async function loadClasses() {
+        const res = await fetch(`/api/classes/${teacherId}`);
+        const classes = await res.json();
+        const select = document.getElementById('class-select');
+        select.innerHTML = '<option value="">Choisir une classe...</option>';
+
+        classes.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.text = c.name;
+            opt.dataset.active = c.is_active; // Stocker l'état
+            select.add(opt);
+        });
+    }
+
+    async function createClass() {
+        const name = document.getElementById('new-class-name').value;
+        await fetch('/api/classes', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ name, teacherId })
+        });
+
+        loadClasses();
+    }
+
+    async function loadClassData() {
+        const select = document.getElementById('class-select');
+        currentClassId = select.value;
+
+        if(!currentClassId) {
+            document.getElementById('dashboard-content').style.display = 'none';
+            return;
+        }
+        document.getElementById('dashboard-content').style.display = 'block';
+
+// Mise à jour état bouton accès élève
+        const selectedOpt = select.options[select.selectedIndex];
+        currentClassActive = (selectedOpt.dataset.active == '1');
+        updateToggleButton();
+
+        // Chargement des élèves
+        loadStudents();
+    }
+
+    async function toggleStudentAccess() {
+        if (!currentClassId) return;
+        currentClassActive = !currentClassActive;
+
+        await fetch(`/api/classes/${currentClassId}/toggle`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ isActive: currentClassActive })
+        });
+
+        // Mettre à jour le dataset de l'option pour garder la cohérence
+        const select = document.getElementById('class-select');
+        select.options[select.selectedIndex].dataset.active = currentClassActive ? '1' : '0';
+        updateToggleButton();
+    }
+
+    function updateToggleButton() {
+        const btn = document.getElementById('toggle-student-btn');
+        const link = document.getElementById('link-student-view');
+
+        if (currentClassActive) {
+            btn.textContent = "ACTIVÉ (Cliquer pour fermer)";
+            btn.style.backgroundColor = "#90ee90"; // Vert
+            link.style.display = "inline-block";
+        } else {
+            btn.textContent = "DÉSACTIVÉ (Cliquer pour ouvrir)";
+            btn.style.backgroundColor = "#ff866d"; // Rouge/Coral
+            link.style.display = "none";
+        }
+    }
+    // --- 2. GESTION DES ÉLÈVES ---
+
+    async function createStudent() {
+        const nameInput = document.getElementById('new-student-name');
+        const name = nameInput.value.trim();
+
+        if (!name) return alert("Veuillez mettre un prénom.");
+        if (!currentClassId) return alert("Aucune classe sélectionnée.");
+
+        try {
+            const res = await fetch('/api/students', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, classId: currentClassId })
+            });
+
+            if (res.ok) {
+                nameInput.value = "";
+                loadStudents();
+            } else {
+                const data = await res.json();
+                alert("Erreur : " + (data.error || "Problème inconnu"));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadStudents() {
+        if (!currentClassId) return;
+
+        const res = await fetch(`/api/students/${currentClassId}`);
+        const students = await res.json();
+
+        const grid = document.getElementById('prof-student-grid');
+        grid.innerHTML = '';
+
+        if (students.length === 0) {
+            grid.innerHTML = "<p>Aucun élève dans cette classe.</p>";
+            return;
+        }
+
+        students.forEach(s => {
+            // Création de la carte élève simple
+            const div = document.createElement('div');
+            div.style.border = "1px solid #ddd";
+            div.style.padding = "10px";
+            div.style.margin = "5px";
+            div.style.display = "inline-block";
+            div.style.textAlign = "center";
+            div.style.backgroundColor = "#f9f9f9";
+            div.style.borderRadius = "8px";
+            // !! adapter taille image car trop petit par rapport à la case
+            div.innerHTML = `
+                <img src="/images/${s.animal_image}" alt="Avatar" style="width: 198px; height: 140px; object-fit: contain;">
+                <p style="margin: 5px 0 0 0; font-weight: bold;">${s.name}</p>
+            `;
+            grid.appendChild(div);
+        });
+    }
+
+    // Lancement au démarrage
+    loadClasses();
+</script>
+</body>
+</html>

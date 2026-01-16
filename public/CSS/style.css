@@ -45,6 +45,88 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
     object-fit: contain;
 }
 
+/* Combinatoire page */
+.page-combinatoire {
+    background-color: #fff6c9;
+    text-align: left;
+}
+
+.page-combinatoire .main-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 30px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.page-combinatoire .title-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 35px;
+}
+
+.page-combinatoire .arrow {
+    width: 45px;
+    height: 45px;
+    background: #ff866d;
+    clip-path: polygon(100% 0, 0 50%, 100% 100%);
+    cursor: pointer;
+}
+
+.page-combinatoire .section {
+    margin-bottom: 45px;
+    width: 100%;
+}
+
+.page-combinatoire .section h2 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+    color: #ff866d;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.page-combinatoire .button-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    max-width: 100%;
+}
+
+.page-combinatoire .button-grid .level-break {
+    margin-right: 35px;
+}
+
+.page-combinatoire .button-grid button {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    background-color: white;
+    border: 3px solid #333;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 2px 2px 0px #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.15s;
+    padding: 0;
+}
+
+.page-combinatoire .button-grid button:hover {
+    transform: translateY(-2px);
+    background-color: #dffce0;
+}
+
+.page-combinatoire .button-grid button:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+}
+
 /* Sidebar & Boutons */
 .sidebar { width: 300px; display: flex; flex-direction: column; gap: 40px; }
 
@@ -111,5 +193,13 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
     .cat-btn {
         font-size: 1.2rem;
         padding: 20px;
+    }
+
+    .page-combinatoire .button-grid {
+        justify-content: center;
+    }
+
+    .page-combinatoire .button-grid .level-break {
+        margin-right: 12px;
     }
 }
