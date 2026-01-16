@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeux Logico mathématiques</title>
+    <link rel="stylesheet" href="/CSS/conservation.css">
+</head>
+<body>
+
+<div id="div-header">
+    <a href="#" onclick="startExercise('student-area')"><div class="arrow"></div></a>
+    <h1>Conservation</h1>
+</div>
+
+
+<h2>La bonne Phrase (vidéos) ?</h2>
+<section class="exercises-grid" id="exercises-bonne-phrase"></section>
+<h2>Les phrases à trou (vidéos)</h2>
+<section class="exercises-grid" id="exercises-trou-phrase"></section>
+<h2>Moins - autant - plus</h2>
+<section class="exercises-grid" id="exercises-moins-autant-plus"></section>
+<h2>La bonne situation</h2>
+<section class="exercises-grid" id="exercises-bonne-situation"></section>
+<h2>La phrase à 2 trous</h2>
+<section class="exercises-grid" id="exercises-trou-phrase2"></section>
+<h2>Je complète</h2>
+<section class="exercises-grid" id="exercises-complete"></section>
+
+
+</body>
+<script>
+
+    function startExercise(type) {
+        // Rediriger vers la page d'exercice
+        window.location.href = `/${type}`;
+    }
+
+</script>
+
+
+
+<script src="/js/loadexercises.js"></script>
