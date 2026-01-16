@@ -31,10 +31,14 @@ app.get('/student-area', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/student.html'));
 });
 
+app.get('/exercises/combinatoire', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/combinatoire.html'));
+});
+
 app.get('/classification', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/classification.html'));
 });
-
+  
 app.get('/conservation', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/conservation.html'));
 });

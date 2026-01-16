@@ -65,6 +65,7 @@
             <a href="#" onclick="startExercise('classification')" class="cat-btn cat-orange">Classification</a>
             <a href="#" onclick="startExercise('seriation')" class="cat-btn cat-green">Sériation</a>
             <a href="#" onclick="startExercise('conservation')" class="cat-btn cat-pink">Conservation</a>
+            <a href="#" onclick="startExercise('combinatoire')" class="cat-btn cat-coral" >Combinatoire</a>
         </nav>
         <button onclick="logoutStudent()" style="margin-top:50px; background: #999; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Changer d'élève</button>
     </div>
@@ -75,27 +76,34 @@
 
     async function init() {
         const teacherId = localStorage.getItem('teacherId');
+        const savedClassId = localStorage.getItem('currentClassId'); // On vérifie la sauvegarde
 
-        // Si pas de teacherId, on ne peut pas charger la liste
         if(!teacherId) {
-            alert("Erreur : Aucun enseignant connecté sur cet appareil. Veuillez vous connecter d'abord sur la page Enseignant.");
+            alert("Erreur : Aucun enseignant connecté.");
             return;
         }
 
         try {
-            // Récupérer les classes du prof
             const res = await fetch(`/api/classes/${teacherId}`);
             const classes = await res.json();
-
             const select = document.getElementById('student-class-select');
-            select.innerHTML = '<option value="">-- Choisir une classe --</option>'; // Option par défaut
+            select.innerHTML = '<option value="">-- Choisir une classe --</option>';
 
             classes.forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c.id;
                 opt.text = c.name;
+                // Si c'est la classe sauvegardée, on la sélectionne
+                if(c.id == savedClassId) opt.selected = true;
                 select.add(opt);
             });
+
+            // SI une classe était déjà sauvegardée, on lance le mode élève directement
+            if (savedClassId) {
+                currentClassId = savedClassId;
+                showStudentApp();
+            }
+
         } catch (e) {
             console.error("Erreur init:", e);
         }
@@ -106,14 +114,19 @@
         currentClassId = select.value;
 
         if (!currentClassId) {
-            alert("Veuillez sélectionner une classe avant de lancer.");
+            alert("Veuillez sélectionner une classe.");
             return;
         }
 
-        // On cache le setup et on lance l'app
+        // On sauvegarde le choix pour le prochain retour sur la page
+        localStorage.setItem('currentClassId', currentClassId);
+        showStudentApp();
+    }
+
+    // Fonction isolée pour afficher l'interface élève
+    function showStudentApp() {
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('student-app').style.display = 'block';
-
         loadStudentsForGrid();
     }
 
@@ -166,10 +179,10 @@
     }
 
     function logoutStudent() {
-        document.getElementById('exercise-menu').style.display = 'none';
-        document.getElementById('student-grid').style.display = 'flex'; // Remettre en flex pour la grille
-        document.getElementById('welcome-msg').style.display = 'block';
         sessionStorage.removeItem('currentStudentId');
+        document.getElementById('exercise-menu').style.display = 'none';
+        document.getElementById('student-grid').style.display = 'flex';
+        document.getElementById('welcome-msg').style.display = 'block';
     }
 
     init();
