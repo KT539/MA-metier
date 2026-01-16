@@ -43,6 +43,9 @@ app.get('/conservation', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/conservation.html'));
 });
 
+app.get('/seriation', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/seriation.html'));
+});
 // --- API ROUTES ---
 // On utilise les fichiers créés dans src/routes
 
