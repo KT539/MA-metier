@@ -18,14 +18,17 @@
 <div id="dashboard-content" style="display:none;">
 
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 id="current-class-title"></h2>
-
+        <div style="background: #fff; padding: 10px; border: 2px solid #333;">
+            <label>Vous souhaitez ajouter un nouvel exercice ?</label>
+            <a href="/exercises_creation" class="cat-btn cat-green" id="link-creation-page">Créer un exercice</a>
+        </div>
         <div style="background: #fff; padding: 10px; border: 2px solid #333;">
             <label>Accès Élèves : </label>
             <button id="toggle-student-btn" class="cat-btn cat-coral" onclick="toggleStudentAccess()">DÉSACTIVÉ</button>
             <a href="/student-area" target="_blank" class="cat-btn cat-green" id="link-student-view" style="display:none;">Ouvrir Vue Élève</a>
         </div>
     </div>
+    <h2 id="current-class-title"></h2>
 
     <h3>Gestion des Élèves</h3>
     <input type="text" id="new-student-name" placeholder="Prénom de l'élève">

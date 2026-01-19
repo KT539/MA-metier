@@ -43,6 +43,14 @@ app.get('/conservation', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/conservation.html'));
 });
 
+app.get('/exercises_creation', (req, res) => {
+    res.sendFile(path.join(__dirname, '/views/exercises_creation.html'));
+});
+
+app.get('/exercises/classification_exercises', (req, res) => {
+    res.sendFile(path.join(__dirname, '/views/exercises/classification_exercises.html'));
+});
+
 app.get('/seriation', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/seriation.html'));
 });
