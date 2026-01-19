@@ -52,7 +52,7 @@
 /* ---------- GRILLE DES BOUTONS ---------- */
 
 .page-seriation .button-grid {
-    display: flex;     /
+    display: flex;
     flex-wrap: wrap;
     gap: 12px;
     max-width: 750px;
