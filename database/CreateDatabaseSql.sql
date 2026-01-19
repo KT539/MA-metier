@@ -40,7 +40,10 @@ CREATE TABLE exercise (
     type VARCHAR(50),
     level INT,
     INDEX idx_type (type),
-    INDEX idx_level (level)
+    INDEX idx_level (level),
+    Prop1_image VARCHAR(50),
+    Prop2_image VARCHAR(50),
+    Answer_image VARCHAR(50)
 );
 
 -- 6. Table Progress
