@@ -4,7 +4,7 @@ import path from 'path';
 const router = express.Router();
 import { fileURLToPath } from 'url';
 // import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/Sqlite_Deprecated/Database.js';
-import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/LinkWIthDatabaseSql.js';
+import db, { createStudent, getClassProgress, getStudentsByClass, updateStudent, deleteStudent } from '../../database/LinkWIthDatabaseSql.js';
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -83,6 +83,33 @@ router.get('/progress/:classId', async (req, res) => {
         res.json(progress);
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+// --- MODIFIER UN ÉLÈVE (UPDATE) ---
+router.put('/:id', async (req, res) => {
+    const studentId = req.params.id;
+    const { name, classId } = req.body; // On récupère le nouveau nom ET la nouvelle classe
+
+    try {
+        await updateStudent(studentId, name, classId);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Erreur update:", err);
+        res.status(500).json({ error: "Impossible de modifier l'élève" });
+    }
+});
+
+// --- SUPPRIMER UN ÉLÈVE (DELETE) ---
+router.delete('/:id', async (req, res) => {
+    const studentId = req.params.id;
+
+    try {
+        await deleteStudent(studentId);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Erreur delete:", err);
+        res.status(500).json({ error: "Impossible de supprimer l'élève" });
     }
 });
 
