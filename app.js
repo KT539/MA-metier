@@ -51,6 +51,9 @@ app.get('/create_exercises/classification_exercises', (req, res) => {
     res.sendFile(__dirname + '/views/create_exercises/classification_exercises.html');
 });
 
+app.get('/seriation', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/seriation.html'));
+});
 // --- API ROUTES ---
 // On utilise les fichiers créés dans src/routes
 
