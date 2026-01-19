@@ -132,6 +132,37 @@ export const createStudent = (firstName, animalImageName, classId) => {
     });
 };
 
+export const updateStudent = (studentId, firstName, class_id) => {
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE student SET name = ?, class_id = ? WHERE id = ?`;
+        db.query(sql, [firstName, class_id, studentId], (err) => {
+            if (err) reject(err);
+            else resolve({ success: true });
+        });
+    });
+};
+
+export const deleteStudent = (studentId) => {
+    return new Promise((resolve, reject) => {
+        // On supprime d'abord les progrès liés pour éviter les erreurs de clé étrangère
+        const sqlDeleteProgress = `DELETE FROM progress WHERE student_id = ?`;
+
+        db.query(sqlDeleteProgress, [studentId], (err) => {
+            if (err) {
+                // Si erreur, on ne bloque pas forcément, mais c'est mieux de logger
+                console.log("Info: Pas de progrès à supprimer ou erreur mineure");
+            }
+
+            // Ensuite on supprime l'élève
+            const sqlDeleteStudent = `DELETE FROM student WHERE id = ?`;
+            db.query(sqlDeleteStudent, [studentId], (err2, result) => {
+                if (err2) reject(err2);
+                else resolve({ success: true });
+            });
+        });
+    });
+};
+
 // --- FONCTIONS PROGRESSION ---
 
 export const getClassProgress = (classId) => {

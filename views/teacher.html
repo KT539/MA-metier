@@ -5,6 +5,47 @@
     <title>Espace Enseignant</title>
     <link rel="stylesheet" href="/CSS/style.css">
     <style>
+        /* Styles ajoutés pour la modale et les boutons d'action */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .action-btn {
+            cursor: pointer;
+            margin: 0 5px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.9em;
+        }
+        .btn-edit { background-color: #f0ad4e; } /* Orange */
+        .btn-delete { background-color: #d9534f; } /* Rouge */
+
+        .student-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px;
+            display: inline-block;
+            text-align: center;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            width: 220px; /* Fixe la largeur pour l'alignement */
+            vertical-align: top;
+        }
         /* Petit ajout de style pour le tableau dynamique */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
@@ -40,8 +81,10 @@
     <h2 id="current-class-title"></h2>
 
     <h3>Gestion des Élèves</h3>
+    <div style="margin-bottom: 20px;">
     <input type="text" id="new-student-name" placeholder="Prénom de l'élève">
     <button onclick="createStudent()">Ajouter Élève</button>
+    </div>
 
     <div class="student-grid" id="prof-student-grid" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 20px;">
     </div>
@@ -55,10 +98,27 @@
     </table>
 </div>
 
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3>Modifier l'élève</h3>
+        <input type="hidden" id="edit-student-id">
+
+        <label>Nom :</label><br>
+        <input type="text" id="edit-student-name" style="width: 90%; margin-bottom: 10px;"><br>
+
+        <label>Changer de classe :</label><br>
+        <select id="edit-student-class" style="width: 95%; margin-bottom: 20px;"></select><br>
+
+        <button onclick="saveStudentEdit()">Enregistrer</button>
+        <button onclick="closeModal()">Annuler</button>
+    </div>
+</div>
+
 <script>
     const teacherId = localStorage.getItem('teacherId') || 1; // Fallback à 1 pour les tests si pas de login
     let currentClassId = null;
     let currentClassActive = false;
+    let allClasses = []; // Stocker toutes les classes pour le menu déroulant de modification
 
     // ==========================================
     // 1. GESTION DES CLASSES
@@ -67,8 +127,11 @@
     async function loadClasses() {
         try {
             const res = await fetch(`/api/classes/${teacherId}`);
+            classes = await res.json(); // On garde la liste en mémoire
             const classes = await res.json();
             const select = document.getElementById('class-select');
+            // Sauvegarder la sélection actuelle si elle existe
+            const savedValue = select.value;
             select.innerHTML = '<option value="">Choisir une classe...</option>';
 
             classes.forEach(c => {
@@ -78,6 +141,9 @@
                 opt.dataset.active = c.is_active;
                 select.add(opt);
             });
+            // Restaurer la sélection ou reset
+            if (savedValue) select.value = savedValue;
+
         } catch (err) {
             console.error("Erreur chargement classes:", err);
         }
@@ -97,7 +163,6 @@
         loadClasses();
     }
 
-    // Fonction principale appelée quand on change de classe
     async function loadClassData() {
         const select = document.getElementById('class-select');
         currentClassId = select.value;
@@ -129,6 +194,7 @@
             body: JSON.stringify({ isActive: currentClassActive })
         });
 
+        // Mettre à jour le dataset de l'option pour garder la cohérence
         const select = document.getElementById('class-select');
         select.options[select.selectedIndex].dataset.active = currentClassActive ? '1' : '0';
         updateToggleButton();
@@ -187,38 +253,123 @@
         const students = await res.json();
 
         const grid = document.getElementById('prof-student-grid');
+        const tableBody = document.getElementById('progress-table-body');
+
         grid.innerHTML = '';
+        tableBody.innerHTML = '';
 
         if (students.length === 0) {
             grid.innerHTML = "<p>Aucun élève dans cette classe.</p>";
+            tableBody.innerHTML = "<tr><td colspan='4'>Pas de données</td></tr>";
             return;
         }
 
         students.forEach(s => {
-            const div = document.createElement('div');
-            div.style.border = "1px solid #ddd";
-            div.style.padding = "10px";
-            div.style.margin = "5px";
-            div.style.display = "inline-block";
-            div.style.textAlign = "center";
-            div.style.backgroundColor = "#f9f9f9";
-            div.style.borderRadius = "8px";
+            const card = document.createElement('div');
+            card.style.border = "1px solid #ddd";
+            card.style.padding = "10px";
+            card.style.margin = "5px";
+            card.style.display = "inline-block";
+            card.style.textAlign = "center";
+            card.style.backgroundColor = "#f9f9f9";
+            card.style.borderRadius = "8px";
+            card.className = 'student-card';
 
-            // ATTENTION : On suppose que les images sont dans /public/images/animaux/
-            // et que la DB contient "cochon rose" -> on ajoute .png
             const nomFichier = s.animal_image.split(' ').join('_');
             const imagePath = `/images/animaux/${nomFichier}.png`;
-            // -------------------------------
 
-            div.innerHTML = `
+            card.innerHTML = `
         <img src="${imagePath}"
              alt="${s.animal_image}"
              style="width: 200px; height: 150px; object-fit: contain;">
         <p style="margin: 5px 0 0 0; font-weight: bold;">${s.name}</p>
+
+        <div style="margin-top:10px;">
+            <button class="action-btn btn-edit" onclick="openEditModal('${s.id}', '${s.name}')">Modif</button>
+            <button class="action-btn btn-delete" onclick="deleteStudent('${s.id}')">Suppr</button>
+        </div>
     `;
 
-            grid.appendChild(div);
+            grid.appendChild(card);
+
+            if (typeof tableBody !== 'undefined' && tableBody) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td>${s.name}</td>
+            <td>${s.classification || '-'}</td>
+            <td>${s.seriation || '-'}</td>
+            <td>${s.conservation || '-'}</td>
+        `;
+                tableBody.appendChild(row);
+            }
         });
+    }
+
+    // --- 3. MODIFICATION ET SUPPRESSION ---
+
+    function openEditModal(studentId, studentName) {
+        document.getElementById('edit-student-id').value = studentId;
+        document.getElementById('edit-student-name').value = studentName;
+
+        // Remplir le select de la modale avec toutes les classes
+        const select = document.getElementById('edit-student-class');
+        select.innerHTML = '';
+        allClasses.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.text = c.name;
+            // Pré-selectionner la classe actuelle
+            if(c.id == currentClassId) opt.selected = true;
+            select.add(opt);
+        });
+
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    async function saveStudentEdit() {
+        const id = document.getElementById('edit-student-id').value;
+        const name = document.getElementById('edit-student-name').value;
+        const newClassId = document.getElementById('edit-student-class').value;
+
+        try {
+            const res = await fetch(`/api/students/${id}`, {
+                method: 'PUT', // ou 'PATCH' selon ton API
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, classId: newClassId })
+            });
+
+            if(res.ok) {
+                closeModal();
+                // Si on a changé de classe, l'élève va disparaitre de la vue actuelle, c'est normal
+                loadStudents();
+            } else {
+                alert("Erreur lors de la modification");
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    async function deleteStudent(id) {
+        if(!confirm("Êtes-vous sûr de vouloir supprimer cet élève ? Cette action est irréversible.")) return;
+
+        try {
+            const res = await fetch(`/api/students/${id}`, {
+                method: 'DELETE'
+            });
+
+            if(res.ok) {
+                loadStudents();
+            } else {
+                alert("Erreur lors de la suppression");
+            }
+        } catch(e) {
+            console.error(e);
+        }
     }
 
     // ==========================================
