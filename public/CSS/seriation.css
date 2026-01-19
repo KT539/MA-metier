@@ -1,0 +1,104 @@
+/* ============ PAGE SÉRIATION ============ */
+
+.page-seriation {
+    background-color: #fff6c9;
+    text-align: left;
+}
+
+.page-seriation .classification-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 30px 40px;
+}
+
+/* ---------- TITRE ---------- */
+
+.page-seriation .title-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 35px;
+}
+
+.page-seriation .title-row h1 {
+    font-size: 2.8rem;
+    color: #39e43f;
+    margin: 0;
+}
+
+.page-seriation .arrow {
+    width: 45px;
+    height: 45px;
+    background: #39e43f;
+    clip-path: polygon(100% 0, 0 50%, 100% 100%);
+    cursor: pointer;
+}
+
+/* ---------- SECTIONS ---------- */
+
+.page-seriation .section {
+    margin-bottom: 45px;
+}
+
+.page-seriation .section h2 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+    color: #39e43f;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+/* ---------- GRILLE DES BOUTONS ---------- */
+
+.page-seriation .button-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    max-width: 750px;
+}
+
+.page-seriation .button-grid .level-break {
+    margin-right: 35px;
+}
+
+/* ---------- BOUTONS ---------- */
+
+.page-seriation .button-grid button {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    background-color: white;
+    border: 3px solid #333;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 2px 2px 0px #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.15s;
+    padding: 0;
+}
+
+.page-seriation .button-grid button:hover {
+    transform: translateY(-2px);
+    background-color: #dffce0;
+}
+
+.page-seriation .button-grid button:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+}
+
+/* ---------- RESPONSIVE ---------- */
+
+@media (max-width: 768px) {
+    .page-seriation .button-grid {
+        justify-content: center;
+    }
+
+    .page-seriation .button-grid .level-break {
+        margin-right: 12px;
+    }
+}

@@ -44,13 +44,16 @@ app.get('/conservation', (req, res) => {
 });
 
 app.get('/exercises_creation', (req, res) => {
-    res.sendFile(__dirname + '/views/exercises_creation.html');
+    res.sendFile(path.join(__dirname, '/views/exercises_creation.html'));
 });
 
 app.get('/exercises/classification_exercises', (req, res) => {
-    res.sendFile(__dirname + '/views/exercises/classification_exercises.html');
+    res.sendFile(path.join(__dirname, '/views/exercises/classification_exercises.html'));
 });
 
+app.get('/seriation', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/seriation.html'));
+});
 // --- API ROUTES ---
 // On utilise les fichiers créés dans src/routes
 

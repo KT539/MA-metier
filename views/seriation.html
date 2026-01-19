@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sériation</title>
+    <link rel="stylesheet" href="/CSS/seriation.css">
+</head>
+
+<body class="page-seriation">
+
+<div class="classification-container">
+
+    <div class="title-row">
+        <div class="arrow" onclick="window.location.href='student-area'"></div>
+        <h1>Sériation</h1>
+    </div>
+
+    <!-- SECTION 1 -->
+    <div class="section">
+        <h2>Le plus petit - le plus grand</h2>
+        <div class="button-grid">
+            <script>
+                for (let i = 1; i <= 20; i++)
+                    if (i % 5 === 0 && i !== 20) {
+                        document.write(`<button class="level-break">${i}</button>`);
+                    } else {
+                        document.write(`<button>${i}</button>`);
+                    }
+            </script>
+        </div>
+    </div>
+
+    <!-- SECTION 2 -->
+    <div class="section">
+        <h2>Plus petit que... - plus grand que...</h2>
+        <div class="button-grid" style="display: grid; grid-template-columns: repeat(15, auto); gap: 12px; width: max-content;">
+            <script>
+                for (let i = 1; i <= 30; i++) {
+                    if (i % 5 === 0 && i % 15 !== 0) {
+                        document.write(`<button class="level-break">${i}</button>`);
+                    } else {
+                        document.write(`<button>${i}</button>`);
+                    }
+                }
+            </script>
+        </div>
+    </div>
+
+    <!-- SECTION 3 -->
+    <div class="section">
+        <h2>Vrai - Faux</h2>
+        <div class="button-grid">
+            <script>
+                for (let i = 1; i <= 20; i++)
+                    if (i % 5 === 0 && i !== 20) {
+                        document.write(`<button class="level-break">${i}</button>`);
+                    } else {
+                        document.write(`<button>${i}</button>`);
+                    }
+            </script>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
