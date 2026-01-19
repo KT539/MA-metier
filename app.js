@@ -47,8 +47,8 @@ app.get('/exercises_creation', (req, res) => {
     res.sendFile(__dirname + '/views/exercises_creation.html');
 });
 
-app.get('/exercises/classification_exercises', (req, res) => {
-    res.sendFile(__dirname + '/views/exercises/classification_exercises.html');
+app.get('/create_exercises/classification_exercises', (req, res) => {
+    res.sendFile(__dirname + '/views/create_exercises/classification_exercises.html');
 });
 
 // --- API ROUTES ---
