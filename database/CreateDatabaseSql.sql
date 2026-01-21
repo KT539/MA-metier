@@ -28,7 +28,8 @@ CREATE TABLE teacher_has_classes (
 -- 4. Table Image
 create table image (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL
+    name VARCHAR(50) NOT NULL,
+    path VARCHAR(50) NOT NULL
     );
 
 -- 5. Table Student
@@ -56,12 +57,17 @@ create table exercise (
 );
 
 -- 8. Table Level
-create table level (
+CREATE TABLE level (
     id INT AUTO_INCREMENT PRIMARY KEY,
     exercise_id INT,
     category_id INT,
-    CONSTRAINT fk_niveau_exercise FOREIGN KEY (exercise_id) REFERENCES exercise(id) ON UPDATE CASCADE,
-    CONSTRAINT fk_niveau_category FOREIGN KEY (category_id) REFERENCES category(id) ON UPDATE CASCADE
+    image_id_1 INT,
+    image_id_2 INT,
+    correct_answer BOOLEAN,
+    CONSTRAINT fk_level_exercise FOREIGN KEY (exercise_id) REFERENCES exercise(id) ON UPDATE CASCADE,
+    CONSTRAINT fk_level_category FOREIGN KEY (category_id) REFERENCES category(id) ON UPDATE CASCADE,
+    CONSTRAINT fk_level_image1 FOREIGN KEY (image_id_1) REFERENCES image(id) ON UPDATE CASCADE,
+    CONSTRAINT fk_level_image2 FOREIGN KEY (image_id_2) REFERENCES image(id) ON UPDATE CASCADE
 );
 
 -- 9. Table Level_has_images

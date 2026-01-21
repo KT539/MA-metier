@@ -155,4 +155,27 @@ export const getClassProgress = (classId) => {
     });
 };
 
+// get shape image for classification1_form (ID 26 à 55)
+export const getShapesImages = () => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT id, name FROM image WHERE id BETWEEN 26 AND 55`;
+        db.query(sql, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+};
+
+// create new level
+export const createLevel = (exerciseId, categoryId, imageId1, imageId2, correctAnswer) => {
+    return new Promise((resolve, reject) => {
+        const sql = `INSERT INTO level (exercise_id, category_id, image_id_1, image_id_2, correct_answer) 
+                     VALUES (?, ?, ?, ?, ?)`;
+        db.query(sql, [exerciseId, categoryId, imageId1, imageId2, correctAnswer], (err, result) => {
+            if (err) reject(err);
+            else resolve(result.insertId);
+        });
+    });
+};
+
 export default db;
