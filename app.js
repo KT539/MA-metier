@@ -60,6 +60,10 @@ app.get('/create_exercises/forms/classification_form1', (req, res) => {
     res.sendFile(__dirname + '/views/create_exercises/forms/classification_form1.html');
 });
 
+app.get('/create_exercises/forms/classification_form2', (req, res) => {
+    res.sendFile(__dirname + '/views/create_exercises/forms/classification_form2.html');
+});
+
 app.get('/api/shapes-images', async (req, res) => {
     try {
         const images = await getShapesImages();
