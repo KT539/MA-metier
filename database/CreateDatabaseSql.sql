@@ -28,7 +28,8 @@ CREATE TABLE teacher_has_classes (
 -- 4. Table Image
 create table image (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL
+    name VARCHAR(50) NOT NULL,
+    path VARCHAR(50) NOT NULL
     );
 
 -- 5. Table Student
