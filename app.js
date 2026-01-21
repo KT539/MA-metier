@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
 import classRoutes from './src/routes/classes.js';
 import studentRoutes from './src/routes/students.js'
+import { getShapesImages, createLevel } from './database/LinkWithDatabaseSql.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -56,8 +57,18 @@ app.get('/seriation', (req, res) => {
 });
 
 app.get('/create_exercises/forms/classification_form1', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views/create_exercises/forms/classification_form1.html'));
+    res.sendFile(__dirname + '/views/create_exercises/forms/classification_form1.html');
 });
+
+app.get('/api/shapes-images', async (req, res) => {
+    try {
+        const images = await getShapesImages();
+        res.json(images);
+    } catch (err) {
+        res.status(500).json({ error: "Erreur lors de la récupération des images" });
+    }
+});
+
 
 // --- API ROUTES ---
 // On utilise les fichiers créés dans src/routes
