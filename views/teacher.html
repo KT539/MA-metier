@@ -1,8 +1,17 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <meta charset="UTF-8">
     <title>Espace Enseignant</title>
     <link rel="stylesheet" href="/CSS/style.css">
+    <style>
+        /* Petit ajout de style pour le tableau dynamique */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .status-ok { color: green; font-weight: bold; }
+        .status-pending { color: orange; }
+    </style>
 </head>
 <body>
 <h1>Espace Enseignant</h1>
@@ -34,56 +43,61 @@
     <input type="text" id="new-student-name" placeholder="Prénom de l'élève">
     <button onclick="createStudent()">Ajouter Élève</button>
 
-    <div class="student-grid" id="prof-student-grid">
+    <div class="student-grid" id="prof-student-grid" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 20px;">
     </div>
 
     <h3>Tableau de Progression</h3>
-    <table border="1" style="width: 100%; background: white; border-collapse: collapse;">
-        <thead>
-        <tr>
-            <th>Élève</th>
-            <th>Classification</th>
-            <th>Sériation</th>
-            <th>Conservation</th>
-        </tr>
+    <table id="progress-table">
+        <thead id="progress-head">
         </thead>
-        <tbody id="progress-table-body">
+        <tbody id="progress-body">
         </tbody>
     </table>
 </div>
 
 <script>
-    const teacherId = localStorage.getItem('teacherId');
+    const teacherId = localStorage.getItem('teacherId') || 1; // Fallback à 1 pour les tests si pas de login
     let currentClassId = null;
     let currentClassActive = false;
 
-    // Charger les classes au démarrage
-    async function loadClasses() {
-        const res = await fetch(`/api/classes/${teacherId}`);
-        const classes = await res.json();
-        const select = document.getElementById('class-select');
-        select.innerHTML = '<option value="">Choisir une classe...</option>';
+    // ==========================================
+    // 1. GESTION DES CLASSES
+    // ==========================================
 
-        classes.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.text = c.name;
-            opt.dataset.active = c.is_active; // Stocker l'état
-            select.add(opt);
-        });
+    async function loadClasses() {
+        try {
+            const res = await fetch(`/api/classes/${teacherId}`);
+            const classes = await res.json();
+            const select = document.getElementById('class-select');
+            select.innerHTML = '<option value="">Choisir une classe...</option>';
+
+            classes.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.text = c.name;
+                opt.dataset.active = c.is_active;
+                select.add(opt);
+            });
+        } catch (err) {
+            console.error("Erreur chargement classes:", err);
+        }
     }
 
     async function createClass() {
         const name = document.getElementById('new-class-name').value;
+        if (!name) return;
+
         await fetch('/api/classes', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ name, teacherId })
         });
 
+        document.getElementById('new-class-name').value = '';
         loadClasses();
     }
 
+    // Fonction principale appelée quand on change de classe
     async function loadClassData() {
         const select = document.getElementById('class-select');
         currentClassId = select.value;
@@ -94,13 +108,15 @@
         }
         document.getElementById('dashboard-content').style.display = 'block';
 
-// Mise à jour état bouton accès élève
+        // 1. Mise à jour titre et bouton
         const selectedOpt = select.options[select.selectedIndex];
+        document.getElementById('current-class-title').innerText = selectedOpt.text;
         currentClassActive = (selectedOpt.dataset.active == '1');
         updateToggleButton();
 
-        // Chargement des élèves
-        loadStudents();
+        // 2. Chargement des données
+        await loadStudents();
+        await loadProgress();
     }
 
     async function toggleStudentAccess() {
@@ -113,7 +129,6 @@
             body: JSON.stringify({ isActive: currentClassActive })
         });
 
-        // Mettre à jour le dataset de l'option pour garder la cohérence
         const select = document.getElementById('class-select');
         select.options[select.selectedIndex].dataset.active = currentClassActive ? '1' : '0';
         updateToggleButton();
@@ -125,15 +140,18 @@
 
         if (currentClassActive) {
             btn.textContent = "ACTIVÉ (Cliquer pour fermer)";
-            btn.style.backgroundColor = "#90ee90"; // Vert
+            btn.style.backgroundColor = "#90ee90";
             link.style.display = "inline-block";
         } else {
             btn.textContent = "DÉSACTIVÉ (Cliquer pour ouvrir)";
-            btn.style.backgroundColor = "#ff866d"; // Rouge/Coral
+            btn.style.backgroundColor = "#ff866d";
             link.style.display = "none";
         }
     }
-    // --- 2. GESTION DES ÉLÈVES ---
+
+    // ==========================================
+    // 2. GESTION DES ÉLÈVES
+    // ==========================================
 
     async function createStudent() {
         const nameInput = document.getElementById('new-student-name');
@@ -151,7 +169,8 @@
 
             if (res.ok) {
                 nameInput.value = "";
-                loadStudents();
+                loadStudents(); // Recharger la liste pour voir le nouvel élève
+                loadProgress(); // Recharger le tableau aussi (nouvelle ligne)
             } else {
                 const data = await res.json();
                 alert("Erreur : " + (data.error || "Problème inconnu"));
@@ -176,7 +195,6 @@
         }
 
         students.forEach(s => {
-            // Création de la carte élève simple
             const div = document.createElement('div');
             div.style.border = "1px solid #ddd";
             div.style.padding = "10px";
@@ -185,12 +203,105 @@
             div.style.textAlign = "center";
             div.style.backgroundColor = "#f9f9f9";
             div.style.borderRadius = "8px";
-            // !! adapter taille image car trop petit par rapport à la case
+
+            // ATTENTION : On suppose que les images sont dans /public/images/animaux/
+            // et que la DB contient "cochon rose" -> on ajoute .png
+            const nomFichier = s.animal_image.split(' ').join('_');
+            const imagePath = `/images/animaux/${nomFichier}.png`;
+            // -------------------------------
+
             div.innerHTML = `
-                <img src="/images/${s.animal_image}" alt="Avatar" style="width: 198px; height: 140px; object-fit: contain;">
-                <p style="margin: 5px 0 0 0; font-weight: bold;">${s.name}</p>
-            `;
+        <img src="${imagePath}"
+             alt="${s.animal_image}"
+             style="width: 200px; height: 150px; object-fit: contain;">
+        <p style="margin: 5px 0 0 0; font-weight: bold;">${s.name}</p>
+    `;
+
             grid.appendChild(div);
+        });
+    }
+
+    // ==========================================
+    // 3. TABLEAU DE PROGRESSION DYNAMIQUE
+    // ==========================================
+
+    async function loadProgress() {
+        if (!currentClassId) return;
+
+        // 1. Récupérer les données brutes
+        const res = await fetch(`/api/students/progress/${currentClassId}`);
+        const data = await res.json();
+        // Format reçu : [{name: "Léo", exercise_type: "Classification", exercise_level: 1, is_completed: 1}, ...]
+
+        const thead = document.getElementById('progress-head');
+        const tbody = document.getElementById('progress-body');
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="100%">Aucune donnée de progression disponible.</td></tr>';
+            return;
+        }
+
+        // 2. Extraire la liste unique des exercices pour faire les colonnes
+        const exercisesSet = new Set();
+        const studentsMap = {};
+
+        data.forEach(row => {
+            if (row.exercise_type) {
+                exercisesSet.add(row.exercise_type);
+            }
+
+            // On regroupe les résultats par élève
+            if (!studentsMap[row.name]) {
+                studentsMap[row.name] = {};
+            }
+            // Ex: studentsMap["Léo"]["Classification"] = {level: 1, completed: 1}
+            if (row.exercise_type) {
+                studentsMap[row.name][row.exercise_type] = {
+                    level: row.exercise_level,
+                    completed: row.is_completed
+                };
+            }
+        });
+
+        const exercises = Array.from(exercisesSet).sort();
+
+        // 3. Créer l'en-tête du tableau
+        let headerRow = '<tr><th>Élève</th>';
+        exercises.forEach(exName => {
+            headerRow += `<th>${exName}</th>`;
+        });
+        headerRow += '</tr>';
+        thead.innerHTML = headerRow;
+
+        // 4. Créer les lignes du tableau (Une par élève)
+        // On récupère aussi les élèves sans progression (via loadStudents si besoin,
+        // mais ici on se base sur le retour de la requête progress qui fait un LEFT JOIN)
+        // Note : Le LEFT JOIN assure qu'on a tous les élèves, même ceux avec exercise_type NULL
+
+        // On recrée une liste unique de tous les élèves trouvés dans data
+        const allStudentNames = [...new Set(data.map(d => d.name))];
+
+        allStudentNames.forEach(studentName => {
+            let rowHtml = `<tr><td>${studentName}</td>`;
+
+            exercises.forEach(exName => {
+                const prog = studentsMap[studentName][exName];
+
+                if (prog) {
+                    if (prog.completed) {
+                        rowHtml += `<td class="status-ok">Niv ${prog.level} ✅</td>`;
+                    } else {
+                        rowHtml += `<td class="status-pending">Niv ${prog.level} ⏳</td>`;
+                    }
+                } else {
+                    rowHtml += `<td>-</td>`;
+                }
+            });
+
+            rowHtml += '</tr>';
+            tbody.innerHTML += rowHtml;
         });
     }
 

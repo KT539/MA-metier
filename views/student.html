@@ -15,6 +15,9 @@
         .student-slot {
             width: 150px;
             padding: 15px;
+            display: flex;
+            flex-direction: column; /* Les éléments s'empilent (Image au-dessus du texte) */
+            align-items: center;
             border: 2px solid #ddd;
             border-radius: 15px;
             background-color: white;
@@ -29,8 +32,9 @@
             background-color: #f9fff9;
         }
         .student-slot img {
-            width: 100px;
-            height: 100px;
+            max-width: 200px;
+            max-height: 200px;
+            justify-content: center;
             object-fit: contain;
             margin-bottom: 10px;
         }
@@ -40,6 +44,19 @@
             margin: 0;
             color: #333;
         }
+
+        /* Ajout d'un bouton pour changer de classe (admin) */
+        .admin-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -54,12 +71,14 @@
 </div>
 
 <div id="student-app" style="display:none; text-align: center;">
+    <button class="admin-btn" onclick="resetClass()">⚙️ Changer de classe</button>
+
     <h1 id="welcome-msg">Qui es-tu ?</h1>
 
     <div class="student-grid" id="student-grid"></div>
 
     <div id="exercise-menu" class="hidden" style="margin-top: 50px;">
-        <h2>Bonjour <span id="student-name" style="color:#e67e22;"></span> ! Choisis ton activité :</h2>
+        <h2>Bonjour <span id="student-name-display" style="color:#e67e22;"></span> ! Choisis ton activité :</h2>
 
         <nav class="categories-nav" style="display: flex; gap: 20px; justify-content: center; margin-top: 30px;">
             <a href="#" onclick="startExercise('classification')" class="cat-btn cat-orange">Classification</a>
@@ -76,7 +95,31 @@
 
     async function init() {
         const teacherId = localStorage.getItem('teacherId');
-        const savedClassId = localStorage.getItem('currentClassId'); // On vérifie la sauvegarde
+
+        // On vérifie la sauvegarde
+        // localStorage = Mémoire Tablette (Classe)
+        // sessionStorage = Mémoire Onglet (Élève connecté)
+        const savedClassId = localStorage.getItem('currentClassId');
+        const savedStudentId = sessionStorage.getItem('currentStudentId');
+        const savedStudentName = sessionStorage.getItem('currentStudentName');
+
+        // Si une classe et un élève sont déjà sauvegardés (Retour d'exercice)
+        if (savedClassId && savedStudentId && savedStudentName) {
+            currentClassId = savedClassId;
+            // On masque le setup, on active l'app
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('student-app').style.display = 'block';
+            // On lance directement le menu exercice pour cet élève
+            showExerciseMenu(savedStudentName);
+            return;
+        }
+
+        // Si une classe était déjà sauvegardée, on lance le mode élève directement (Grille)
+        if (savedClassId) {
+            currentClassId = savedClassId;
+            showStudentApp();
+            return;
+        }
 
         if(!teacherId) {
             alert("Erreur : Aucun enseignant connecté.");
@@ -93,16 +136,10 @@
                 const opt = document.createElement('option');
                 opt.value = c.id;
                 opt.text = c.name;
-                // Si c'est la classe sauvegardée, on la sélectionne
+                // Si c'est la classe sauvegardée, on la sélectionne (optionnel ici car géré au dessus)
                 if(c.id == savedClassId) opt.selected = true;
                 select.add(opt);
             });
-
-            // SI une classe était déjà sauvegardée, on lance le mode élève directement
-            if (savedClassId) {
-                currentClassId = savedClassId;
-                showStudentApp();
-            }
 
         } catch (e) {
             console.error("Erreur init:", e);
@@ -123,10 +160,26 @@
         showStudentApp();
     }
 
+    // Fonction pour changer de classe (supprime la sauvegarde)
+    function resetClass() {
+        if(confirm("Changer de classe ?")) {
+            localStorage.removeItem('currentClassId');
+            sessionStorage.clear();
+            location.reload();
+        }
+    }
+
     // Fonction isolée pour afficher l'interface élève
     function showStudentApp() {
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('student-app').style.display = 'block';
+
+        // Reset de l'affichage pour montrer la grille
+        document.getElementById('student-grid').style.display = 'flex';
+        document.getElementById('welcome-msg').style.display = 'block';
+        document.getElementById('exercise-menu').style.display = 'none';
+        document.querySelector('.admin-btn').style.display = 'inline-block';
+
         loadStudentsForGrid();
     }
 
@@ -146,11 +199,13 @@
                 const div = document.createElement('div');
                 div.className = 'student-slot';
 
-                // Utilisation de name (base de données) et ajout fallback image
-                const imgSrc = s.animal_image ? `/images/${s.animal_image}` : '/images/chat_jaune.png';
+                let nomFichier = s.animal_image ? s.animal_image.split(' ').join('_') : 'default';
+                let imgSrc = `/images/animaux/${nomFichier}.png`;
 
                 div.innerHTML = `
-                    <img src="${imgSrc}" alt="${s.name}">
+                    <img src="${imgSrc}"
+                         alt="${s.name}"
+                         onerror="this.src='/images/animaux/chat_jaune.png'; this.style.opacity='0.5';">
                     <p>${s.name}</p>
                 `;
                 div.onclick = () => selectStudent(s);
@@ -162,15 +217,23 @@
     }
 
     function selectStudent(student) {
+        // On sauvegarde l'élève en session pour le retour d'exercice
+        sessionStorage.setItem('currentStudentId', student.id);
+        sessionStorage.setItem('currentStudentName', student.name);
+
+        showExerciseMenu(student.name);
+    }
+
+    function showExerciseMenu(studentName) {
         document.getElementById('student-grid').style.display = 'none';
         document.getElementById('welcome-msg').style.display = 'none';
+        document.querySelector('.admin-btn').style.display = 'none'; // On cache le bouton changer classe
 
-        document.getElementById('exercise-menu').style.display = 'block';
-        document.getElementById('exercise-menu').classList.remove('hidden'); // Au cas où la classe hidden CSS cache tout
+        const menu = document.getElementById('exercise-menu');
+        menu.style.display = 'block';
+        menu.classList.remove('hidden'); // Au cas où la classe hidden CSS cache tout
 
-        document.getElementById('student-name').textContent = student.first_name;
-
-        sessionStorage.setItem('currentStudentId', student.id);
+        document.getElementById('student-name-display').textContent = studentName;
     }
 
     function startExercise(type) {
@@ -180,9 +243,10 @@
 
     function logoutStudent() {
         sessionStorage.removeItem('currentStudentId');
-        document.getElementById('exercise-menu').style.display = 'none';
-        document.getElementById('student-grid').style.display = 'flex';
-        document.getElementById('welcome-msg').style.display = 'block';
+        sessionStorage.removeItem('currentStudentName');
+
+        // Retour à la grille de la classe actuelle
+        showStudentApp();
     }
 
     init();

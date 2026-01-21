@@ -1,6 +1,6 @@
 import express from 'express';
-import * as db from '../../database/Database.js';
-
+//import * as db from '../../database/Sqlite_Deprecated/Database.js';
+import * as db from '../../database/LinkWIthDatabaseSql.js';
 const router = express.Router();
 
 router.post('/register', async (req, res) => {
