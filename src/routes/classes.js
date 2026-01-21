@@ -1,6 +1,6 @@
 import express from 'express';
 // import * as db from '../../database/Sqlite_Deprecated/Database.js';
-import * as db from '../../database/LinkWIthDatabaseSql.js';
+import * as db from '../../database/LinkWithDatabaseSql.js';
 const router = express.Router();
 
 // Récupérer les classes d'un prof

@@ -4,7 +4,7 @@ import path from 'path';
 const router = express.Router();
 import { fileURLToPath } from 'url';
 // import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/Sqlite_Deprecated/Database.js';
-import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/LinkWIthDatabaseSql.js';
+import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/LinkWithDatabaseSql.js';
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
