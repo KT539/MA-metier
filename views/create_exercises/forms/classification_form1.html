@@ -8,7 +8,7 @@
 </head>
 <body>
 <div class="container">
-    <a href="/create_exercises/classification_exercises" class="arrow" title="Retour"></a>
+    <a href="#" id="back-to-exercises" class="arrow" title="Retour"></a>
 
     <h1>Configuration</h1>
     <p class="category-label">Pareils ou différents ?</p>
@@ -44,5 +44,18 @@
         <button type="submit" class="cat-btn cat-orange">Générer l'exercice</button>
     </form>
 </div>
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const catId = params.get('category_id');
+    const backBtn = document.getElementById('back-to-exercises');
+
+    if (catId) {
+        // send back to exercise selection while saving category_id
+        backBtn.setAttribute('href', `/create_exercises/classification_exercises?category_id=${catId}`);
+    } else {
+        // default send-back if ID is lost
+        backBtn.setAttribute('href', `/create_exercises/classification_exercises`);
+    }
+</script>
 </body>
 </html>

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/CSS/classification_exercises.css"> </head>
 <body>
 <div class="container">
-    <a href="/exercises_creation" class="arrow" title="Retour"></a>
+    <a href="javascript:history.back()" class="arrow" title="Retour"></a>
 
     <h1>Créer un exercice</h1>
     <label class="exercise-label">Veuillez sélectionner un type d'exercice :</label>
@@ -23,9 +23,11 @@
     // get category_id from current URL
     const urlParams = new URLSearchParams(window.location.search);
     const catId = urlParams.get('category_id');
+    const backArrow = document.querySelector('.arrow');
 
     // update all links with catId and exerciseId
     if (catId) {
+        backArrow.setAttribute('href', `/exercises_creation?last_cat=${catId}`);
         const buttons = document.querySelectorAll('.cat-btn');
         buttons.forEach(btn => {
             const exerciseId = btn.getAttribute('data-ex');
