@@ -20,9 +20,10 @@
   },
   "keywords": [],
   "dependencies": {
-    "cors": "^2.8.5",
     "better-sqlite3": "^12.6.0",
+    "cors": "^2.8.5",
     "express": "^5.2.1",
+    "mysql2": "^3.16.1",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
   },
