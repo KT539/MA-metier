@@ -1,8 +1,25 @@
-/* ============ PAGE SÉRIATION ============ */
+/* Page sériation */
+
+:root {
+    /* Système de couleur */
+    --color-bg-page: #fff6c9;
+    --color-primary: #39e43f;
+    --color-primary-hover: #dffce0;
+    --color-white: #ffffff;
+    --color-black: #333333;
+
+    /* Effects */
+    --shadow-btn: 2px 2px 0px #000;
+    --transition-standard: 0.15s ease-in-out;
+}
+
+/* Layout global */
 
 .page-seriation {
-    background-color: #fff6c9;
+    background-color: var(--color-bg-page);
     text-align: left;
+    min-height: 100vh;
+    font-family: sans-serif;
 }
 
 .page-seriation .classification-container {
@@ -11,7 +28,7 @@
     padding: 30px 40px;
 }
 
-/* ---------- TITRE ---------- */
+/* Header et titre */
 
 .page-seriation .title-row {
     display: flex;
@@ -23,19 +40,24 @@
 
 .page-seriation .title-row h1 {
     font-size: 2.8rem;
-    color: #39e43f;
+    color: var(--color-primary);
     margin: 0;
 }
 
 .page-seriation .arrow {
     width: 45px;
     height: 45px;
-    background: #39e43f;
+    background: var(--color-primary);
     clip-path: polygon(100% 0, 0 50%, 100% 100%);
     cursor: pointer;
+    transition: transform var(--transition-standard);
 }
 
-/* ---------- SECTIONS ---------- */
+.page-seriation .arrow:hover {
+    transform: scale(1.1);
+}
+
+/* Contenu des sections */
 
 .page-seriation .section {
     margin-bottom: 45px;
@@ -44,12 +66,12 @@
 .page-seriation .section h2 {
     font-size: 1.4rem;
     margin-bottom: 10px;
-    color: #39e43f;
+    color: var(--color-primary);
     font-weight: bold;
     text-decoration: underline;
 }
 
-/* ---------- GRILLE DES BOUTONS ---------- */
+/* Système de grille des boutons */
 
 .page-seriation .button-grid {
     display: flex;
@@ -62,38 +84,51 @@
     margin-right: 35px;
 }
 
-/* ---------- BOUTONS ---------- */
+/* Boutons individuels */
 
 .page-seriation .button-grid button {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    font-size: 1.3rem;
-    background-color: white;
-    border: 3px solid #333;
-    cursor: pointer;
-    font-weight: bold;
-    box-shadow: 2px 2px 0px #000;
+    /* Layout */
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: 0.15s;
+    width: 55px;
+    height: 55px;
     padding: 0;
+
+    /* Styling */
+    background: var(--color-white);
+    border: 3px solid var(--color-black);
+    border-radius: 50%;
+    box-shadow: var(--shadow-btn);
+    cursor: pointer;
+
+    /* Typographie */
+    font-size: 1.3rem;
+    font-weight: bold;
+
+    /* Animation */
+    transition: 0.15s;
 }
 
+/* Feedback visuel au survol */
 .page-seriation .button-grid button:hover {
     transform: translateY(-2px);
     background-color: #dffce0;
 }
 
+/* Feedback tactile au clic */
 .page-seriation .button-grid button:active {
     transform: translate(2px, 2px);
     box-shadow: none;
 }
 
-/* ---------- RESPONSIVE ---------- */
+/* Réglages responsive */
 
 @media (max-width: 768px) {
+    .page-seriation .classification-container {
+        padding: 20px;
+    }
+
     .page-seriation .button-grid {
         justify-content: center;
     }
