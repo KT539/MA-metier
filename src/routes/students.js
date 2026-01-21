@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Définition du chemin pour les images
-const dossierStatic = path.join(__dirname, '../../public/images');
+const dossierStatic = path.join(__dirname, '../../public/images/animaux');
 app.use(express.static(dossierStatic));
 
 

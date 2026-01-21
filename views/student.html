@@ -15,6 +15,9 @@
         .student-slot {
             width: 150px;
             padding: 15px;
+            display: flex;
+            flex-direction: column; /* Les éléments s'empilent (Image au-dessus du texte) */
+            align-items: center;
             border: 2px solid #ddd;
             border-radius: 15px;
             background-color: white;
@@ -29,8 +32,9 @@
             background-color: #f9fff9;
         }
         .student-slot img {
-            width: 100px;
-            height: 100px;
+            max-width: 200px;
+            max-height: 200px;
+            justify-content: center;
             object-fit: contain;
             margin-bottom: 10px;
         }
@@ -195,13 +199,13 @@
                 const div = document.createElement('div');
                 div.className = 'student-slot';
 
-                // Utilisation de name (base de données) et ajout fallback image
-                let imgSrc = s.animal_image;
-                if (!imgSrc) imgSrc = '/images/chat_jaune.png';
-                else if (!imgSrc.startsWith('/images/')) imgSrc = `/images/${imgSrc}`;
+                let nomFichier = s.animal_image ? s.animal_image.split(' ').join('_') : 'default';
+                let imgSrc = `/images/animaux/${nomFichier}.png`;
 
                 div.innerHTML = `
-                    <img src="${imgSrc}" alt="${s.name}">
+                    <img src="${imgSrc}"
+                         alt="${s.name}"
+                         onerror="this.src='/images/animaux/chat_jaune.png'; this.style.opacity='0.5';">
                     <p>${s.name}</p>
                 `;
                 div.onclick = () => selectStudent(s);

@@ -5,7 +5,7 @@ import mysql from 'mysql2';
 const db = mysql.createConnection({
     host: 'localhost',      // 127.0.0.1
     user: 'root',           // Ton utilisateur HeidiSQL
-    password: 'root',           // Ton mot de passe HeidiSQL
+    password: 'root',       // Ton mot de passe HeidiSQL
     database: 'ecole_echallens' // Le nom de ta base
 });
 
@@ -42,15 +42,11 @@ export const getTeacherByCredentials = (username, password) => {
 
 export const getClassesByTeacher = (teacherId) => {
     return new Promise((resolve, reject) => {
-        // On récupère les classes liées au prof via la table de liaison
         const sql = `
             SELECT c.id, c.name, c.is_active FROM classes c
-            JOIN class_teachers ct ON c.id = ct.class_id
-            WHERE ct.teacher_id = ?
+            JOIN teacher_has_classes thc ON c.id = thc.class_id
+            WHERE thc.teacher_id = ?
         `;
-        // db.query(sql, [teacherId], (err, rows) => {
-        //    if (err) reject(err);
-        //    else resolve(rows);
         db.query(sql, [teacherId], (err, rows) => {
             if (err) {
                 console.error("Erreur SQL getClassesByTeacher:", err);
@@ -71,13 +67,12 @@ export const createClass = (name, teacherId) => {
 
             const newClassId = result.insertId;
 
-            // 2. On crée la liaison dans la table class_teachers
-            const sqlLink = `INSERT INTO class_teachers (class_id, teacher_id) VALUES (?, ?)`;
+            // 2. On crée la liaison dans la table teacher_has_classes
+            const sqlLink = `INSERT INTO teacher_has_classes (class_id, teacher_id) VALUES (?, ?)`;
 
             db.query(sqlLink, [newClassId, teacherId], (errLink) => {
                 if (errLink) return reject(errLink);
 
-                // On renvoie l'objet comme avant
                 resolve({ id: newClassId, name });
             });
         });
@@ -100,7 +95,12 @@ export const toggleClassStatus = (classId, isActive) => {
 
 export const getStudentsByClass = (classId) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT * FROM student WHERE class_id = ?`;
+        const sql = `
+            SELECT s.id, s.name, i.name as animal_image, s.class_id
+            FROM student s
+            LEFT JOIN image i ON s.image_id = i.id
+            WHERE s.class_id = ?
+        `;
         db.query(sql, [classId], (err, rows) => {
             if (err) reject(err);
             else resolve(rows);
@@ -108,13 +108,26 @@ export const getStudentsByClass = (classId) => {
     });
 };
 
-export const createStudent = (firstName, animalImage, classId) => {
+export const createStudent = (firstName, animalImageName, classId) => {
     return new Promise((resolve, reject) => {
-        // Attention aux noms de colonnes (name vs first_name selon ta BDD)
-        const sql = `INSERT INTO student (name, animal_image, class_id) VALUES (?, ?, ?)`;
-        db.query(sql, [firstName, animalImage, classId], (err, result) => {
-            if (err) reject(err);
-            else resolve(result.insertId);
+        // Étape 1 : On doit trouver l'ID de l'image correspondant au nom (ex: "cochon rose")
+        const sqlFindImage = `SELECT id FROM image WHERE name = ?`;
+
+        db.query(sqlFindImage, [animalImageName], (err, results) => {
+            if (err) return reject(err);
+
+            if (results.length === 0) {
+                return reject(new Error(`L'image "${animalImageName}" n'existe pas dans la base de données.`));
+            }
+
+            const imageId = results[0].id;
+
+            // Étape 2 : Insertion de l'élève avec l'ID de l'image trouvé
+            const sqlInsert = `INSERT INTO student (name, image_id, class_id) VALUES (?, ?, ?)`;
+            db.query(sqlInsert, [firstName, imageId, classId], (errInsert, result) => {
+                if (errInsert) reject(errInsert);
+                else resolve(result.insertId);
+            });
         });
     });
 };
@@ -123,11 +136,16 @@ export const createStudent = (firstName, animalImage, classId) => {
 
 export const getClassProgress = (classId) => {
     return new Promise((resolve, reject) => {
-        // Adaptation des noms de colonnes pour MySQL
         const sql = `
-            SELECT s.name, p.exercise_type, p.exercise_level, p.is_completed 
+            SELECT
+                s.name,
+                e.name as exercise_type,    -- Nom de l'exercice (ex: Classification)
+                l.id as exercise_level,     -- ID ou numéro du niveau
+                p.is_completed
             FROM student s
-            LEFT JOIN progress p ON s.id = p.student_id
+                LEFT JOIN progress p ON s.id = p.student_id
+                LEFT JOIN level l ON p.level_id = l.id
+                LEFT JOIN exercise e ON l.exercise_id = e.id
             WHERE s.class_id = ?
         `;
         db.query(sql, [classId], (err, rows) => {
