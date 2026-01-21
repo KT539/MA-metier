@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Exercice</title>
+    <link rel="stylesheet" href="/CSS/classification1_form.css">
+</head>
+<body>
+<div class="container">
+    <a href="#" id="back-to-exercises" class="arrow" title="Retour"></a>
+
+    <h1>Configuration</h1>
+    <p class="category-label">Pareils ou différents ?</p>
+
+    <form id="exercise-config-form">
+        <div class="form-group">
+            <label for="image-base">Image de base :</label>
+            <select id="image-base" name="image-base">
+                <option value="carre_rouge.png">Carré Rouge</option>
+                <option value="rond_bleu.png">Rond Bleu</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="image-comp">Image de comparaison :</label>
+            <select id="image-comp" name="image-comp">
+                <option value="carre_rouge.png">Carré Rouge</option>
+                <option value="triangle_vert.png">Triangle Vert</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Réponse correcte :</label>
+            <div class="answer-selection">
+                <input type="radio" id="equal" name="correct-answer" value="same" checked>
+                <label for="equal" class="radio-card">=</label>
+
+                <input type="radio" id="not-equal" name="correct-answer" value="different">
+                <label for="not-equal" class="radio-card">≠</label>
+            </div>
+        </div>
+
+        <button type="submit" class="cat-btn cat-orange">Générer l'exercice</button>
+    </form>
+</div>
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const catId = params.get('category_id');
+    const backBtn = document.getElementById('back-to-exercises');
+
+    if (catId) {
+        // send back to exercise selection while saving category_id
+        backBtn.setAttribute('href', `/create_exercises/classification_exercises?category_id=${catId}`);
+    } else {
+        // default send-back if ID is lost
+        backBtn.setAttribute('href', `/create_exercises/classification_exercises`);
+    }
+</script>
+</body>
+</html>

@@ -7,17 +7,36 @@
     <link rel="stylesheet" href="/CSS/classification_exercises.css"> </head>
 <body>
 <div class="container">
-    <a href="/exercises_creation" class="arrow" title="Retour"></a>
+    <a href="javascript:history.back()" class="arrow" title="Retour"></a>
 
     <h1>Créer un exercice</h1>
-    <label class="category-label">Veuillez sélectionner un type d'exercice :</label>
+    <label class="exercise-label">Veuillez sélectionner un type d'exercice :</label>
 
-    <div class="category-buttons">
-        <a href="/exercises/forms/classification_form1" class="cat-btn" id="link-classification-form1">Exercice 1 :<br> Pareils ou différents ?</a>
-        <a href="/exercises/forms/classification_form2" class="cat-btn" id="link-classification-form2">Exercice 2 :<br> Quel est le point commun</a>
-        <a href="/exercises/forms/classification_form3" class="cat-btn" id="link-classification-form3">Exercice 3 :<br> La bonne image</a>
-        <a href="/exercises/forms/classification_form4" class="cat-btn" id="link-classification-form4">Exercice 4 :<br> Sur la pile</a>
+    <div class="exercise-buttons">
+        <a href="/create_exercises/forms/classification_form1" class="cat-btn" data-ex="1">Exercice 1 :<br> Pareils ou différents ?</a>
+        <a href="/create_exercises/forms/classification_form2" class="cat-btn" data-ex="2">Exercice 2 :<br> Quel est le point commun</a>
+        <a href="/create_exercises/forms/classification_form3" class="cat-btn" data-ex="3">Exercice 3 :<br> La bonne image</a>
+        <a href="/create_exercises/forms/classification_form4" class="cat-btn" data-ex="4">Exercice 4 :<br> Sur la pile</a>
     </div>
 </div>
+<script>
+    // get category_id from current URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const catId = urlParams.get('category_id');
+    const backArrow = document.querySelector('.arrow');
+
+    // update all links with catId and exerciseId
+    if (catId) {
+        backArrow.setAttribute('href', `/exercises_creation?last_cat=${catId}`);
+        const buttons = document.querySelectorAll('.cat-btn');
+        buttons.forEach(btn => {
+            const exerciseId = btn.getAttribute('data-ex');
+            const baseUrl = btn.getAttribute('href');
+
+            // rebuild the link
+            btn.setAttribute('href', `${baseUrl}?category_id=${catId}&exercise_id=${exerciseId}`);
+        });
+    }
+</script>
 </body>
 </html>
