@@ -44,7 +44,7 @@ export const getClassesByTeacher = (teacherId) => {
     return new Promise((resolve, reject) => {
         const sql = `
             SELECT c.id, c.name, c.is_active FROM classes c
-            JOIN teacher_has_classes thc ON c.id = thc.class_id
+                                                      JOIN teacher_has_classes thc ON c.id = thc.class_id
             WHERE thc.teacher_id = ?
         `;
         db.query(sql, [teacherId], (err, rows) => {
@@ -98,7 +98,7 @@ export const getStudentsByClass = (classId) => {
         const sql = `
             SELECT s.id, s.name, i.name as animal_image, s.class_id
             FROM student s
-            LEFT JOIN image i ON s.image_id = i.id
+                     LEFT JOIN image i ON s.image_id = i.id
             WHERE s.class_id = ?
         `;
         db.query(sql, [classId], (err, rows) => {
@@ -132,16 +132,47 @@ export const createStudent = (firstName, animalImageName, classId) => {
     });
 };
 
+export const updateStudent = (studentId, firstName, class_id) => {
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE student SET name = ?, class_id = ? WHERE id = ?`;
+        db.query(sql, [firstName, class_id, studentId], (err) => {
+            if (err) return reject(err); // On retourne le rejet pour stopper
+            resolve({ success: true });
+        });
+    });
+};
+
+export const deleteStudent = (studentId) => {
+    return new Promise((resolve, reject) => {
+        // On supprime d'abord les progrès liés pour éviter les erreurs de clé étrangère
+        const sqlDeleteProgress = `DELETE FROM progress WHERE student_id = ?`;
+
+        db.query(sqlDeleteProgress, [studentId], (err, result) => {
+            if (err) {
+                console.error("Erreur suppression progression:", err);
+                return reject(err);
+            }
+
+            // Ensuite on supprime l'élève
+            const sqlDeleteStudent = `DELETE FROM student WHERE id = ?`;
+            db.query(sqlDeleteStudent, [studentId], (err2, result2) => {
+                if (err2) return reject(err2);
+                resolve({ success: true });
+            });
+        });
+    });
+};
+
 // --- FONCTIONS PROGRESSION ---
 
 export const getClassProgress = (classId) => {
     return new Promise((resolve, reject) => {
         const sql = `
-            SELECT
-                s.name,
+            SELECT 
+                s.name, 
                 e.name as exercise_type,    -- Nom de l'exercice (ex: Classification)
                 l.id as exercise_level,     -- ID ou numéro du niveau
-                p.is_completed
+                p.is_completed 
             FROM student s
                 LEFT JOIN progress p ON s.id = p.student_id
                 LEFT JOIN level l ON p.level_id = l.id
