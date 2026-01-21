@@ -1,0 +1,245 @@
+body {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+    background: linear-gradient(to bottom, #FFF4D6 0%, #FFEAA7 100%);
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.arrow {
+    display: inline-block;
+    font-size: 28px;
+    text-decoration: none;
+    color: #333;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+}
+
+.arrow:hover {
+    transform: translateX(-5px);
+}
+
+h1 {
+    color: #FF9966;
+    font-size: 48px;
+    text-align: center;
+    margin: 10px 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.subtitle {
+    text-align: center;
+    color: #FF9966;
+    font-size: 20px;
+    text-decoration: underline;
+    margin-bottom: 30px;
+}
+
+.instructions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.speaker-icon {
+    font-size: 32px;
+    background: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+}
+
+.instructions p {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+    margin: 0;
+}
+
+.progress-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.progress-segment {
+    flex: 1;
+    height: 12px;
+    background: white;
+    border-radius: 20px;
+    border: 2px solid #ddd;
+}
+
+.progress-segment.active {
+    background: #4CAF50;
+    border-color: #4CAF50;
+}
+
+.level-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    margin: 40px 0;
+}
+
+.image-box {
+    width: 280px;
+    height: 280px;
+    background: white;
+    border: 3px solid #333;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    position: relative;
+}
+
+.image-box img {
+    max-width: 85%;
+    max-height: 85%;
+    object-fit: contain;
+}
+
+.image-placeholder {
+    font-size: 18px;
+    color: #666;
+    text-align: center;
+    padding: 20px;
+}
+
+.answer-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.answer-btn {
+    width: 80px;
+    height: 80px;
+    background: white;
+    border: 3px solid #333;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: bold;
+    transition: all 0.2s;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+.answer-btn:hover {
+    transform: scale(1.05);
+}
+
+.answer-btn.correct {
+    background: #90EE90;
+    border-color: #228B22;
+    box-shadow: 0 0 15px rgba(144, 238, 144, 0.6);
+}
+
+.equal-sign {
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.equal-sign::before,
+.equal-sign::after {
+    content: '';
+    width: 40px;
+    height: 6px;
+    background: #4CAF50;
+    border-radius: 3px;
+}
+
+.not-equal-sign {
+    position: relative;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.not-equal-sign::before,
+.not-equal-sign::after {
+    content: '';
+    width: 40px;
+    height: 6px;
+    background: #F44336;
+    border-radius: 3px;
+}
+
+.not-equal-sign::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 50px;
+    height: 7px;
+    background: #F44336;
+}
+
+.info-panel {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 30px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.info-panel p {
+    margin: 8px 0;
+    color: #555;
+    font-size: 14px;
+}
+
+.info-panel strong {
+    color: #333;
+}
+
+.actions {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 15px 35px;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 16px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.btn-primary {
+    background: #FF9966;
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #FF7744;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}

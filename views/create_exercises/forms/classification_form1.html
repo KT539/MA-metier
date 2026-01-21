@@ -76,24 +76,56 @@
                 const option = document.createElement('option');
                 option.value = img.id;
                 option.textContent = img.name;
-
                 selectBase.appendChild(option.cloneNode(true));
                 selectComp.appendChild(option);
             });
         } catch (error) {
             console.error("Erreur lors du chargement des images:", error);
         }
-    });
 
-    // validation
-    document.getElementById('exercise-config-form').addEventListener('submit', function(e) {
-        const img1 = document.getElementById('image-base').value;
-        const img2 = document.getElementById('image-comp').value;
-
-        if (!img1 || !img2) {
+        // manage form submission
+        document.getElementById('exercise-config-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            alert("Veuillez sélectionner les deux images pour l'exercice.");
-        }
+
+            const img1 = document.getElementById('image-base').value;
+            const img2 = document.getElementById('image-comp').value;
+
+            if (!img1 || !img2) {
+                alert("Veuillez sélectionner les deux images pour l'exercice.");
+                return;
+            }
+
+            const formData = {
+                exercise_id: document.getElementById('hidden_exercise_id').value,
+                category_id: document.getElementById('hidden_category_id').value,
+                image_id_1: img1,
+                image_id_2: img2,
+                correct_answer: document.querySelector('input[name="correct_answer"]:checked').value
+            };
+
+            try {
+                const response = await fetch('/api/create-level', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    // return to teacher area
+                    window.location.href = `/teacher-dashboard`;
+                } else {
+                    alert("Erreur : " + result.error);
+                }
+            } catch (error) {
+                console.error("Erreur lors de la création du niveau:", error);
+                alert("Erreur lors de la création du niveau");
+            }
+        });
     });
 </script>
 </body>

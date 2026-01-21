@@ -1,16 +1,13 @@
 //function to create circles for each exercise type, will need to modify to have it work with database data
 function loadexercises(sectionid, numberOfCircles, btncolour) {
     const grid = document.getElementById(sectionid);
-    
-    grid.innerHTML = ''; //clear grid
 
-    for (let i = 1; i <= numberOfCircles; i++) { //defines number of circles (*replace with foreach exercise from db)
-        const circle = document.createElement('div'); //creates circle
+    grid.innerHTML = '';
+
+    for (let i = 1; i <= numberOfCircles; i++) {
+        const circle = document.createElement('div');
         circle.className = 'exercise-circle';
-        
-       
         circle.textContent = i;
-
 
         Object.assign(circle.style, {
             width: '55px',
@@ -27,9 +24,20 @@ function loadexercises(sectionid, numberOfCircles, btncolour) {
             alignItems: 'center',
             transition: '0.15s',
             padding: '0',
-            margin: '5px' 
+            margin: '5px'
         });
 
+        // --- AJOUT DE LA REDIRECTION CLIC ---
+        circle.addEventListener('click', () => {
+            if (sectionid === 'exercises-grid-pareils') {
+                // Redirige vers la route dynamique que nous avons créée dans app.js
+                window.location.href = `/exercise/classification1/level/${i}`;
+            } else {
+                console.log(`Exercice ${i} de la section ${sectionid} cliqué (pas encore de lien).`);
+            }
+        });
+
+        // --- STYLES HOVER (inchangés) ---
         circle.addEventListener('mouseenter', () => {
             circle.style.transform = 'translateY(-2px)';
             circle.style.backgroundColor = btncolour;
@@ -46,11 +54,9 @@ function loadexercises(sectionid, numberOfCircles, btncolour) {
         });
 
         circle.addEventListener('mouseup', () => {
-            circle.style.transform = 'translateY(-2px)'; 
+            circle.style.transform = 'translateY(-2px)';
             circle.style.boxShadow = '2px 2px 0px #000';
         });
-
-
 
         grid.appendChild(circle);
     }
