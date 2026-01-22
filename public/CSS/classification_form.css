@@ -133,3 +133,34 @@ input[type="radio"]:checked + .radio-card {
     h1 { font-size: 1.8em; }
     .radio-card { padding: 10px 20px; font-size: 1.5rem; }
 }
+
+
+/* utilisé en form2 */
+
+.radio-card-text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 15px 10px;
+    background: white;
+    border: 2px solid #333;
+    border-radius: 10px;
+    box-shadow: 2px 2px 0px #000;
+    cursor: pointer;
+
+
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+/* L'effet quand on clique (Orange) */
+input[type="radio"]:checked + .radio-card-text {
+    background-color: #ffb347;
+    color: #000;
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px #000;
+}
