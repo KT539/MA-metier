@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
 import classRoutes from './src/routes/classes.js';
 import studentRoutes from './src/routes/students.js'
-import { getShapesImages, createLevel } from './database/LinkWithDatabaseSql.js';
+import {getShapesImages, createLevel, getLevelsByExerciseName, getCategories, getExerciseIdByName, getLevelById, saveProgress} from './database/LinkWithDatabaseSql.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -73,6 +73,68 @@ app.get('/api/shapes-images', async (req, res) => {
     }
 });
 
+app.get('/api/exercises/:name/levels', async (req, res) => {
+    try {
+        const exerciseName = req.params.name;
+        const levels = await getLevelsByExerciseName(exerciseName);
+        res.json(levels);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur lors de la récupération des niveaux" });
+    }
+});
+
+// --- API ROUTES AJOUTÉES ---
+
+// 1. Récupérer les catégories pour le formulaire
+app.get('/api/categories', async (req, res) => {
+    try {
+        const cats = await getCategories();
+        res.json(cats);
+    } catch (e) { res.status(500).json({error: e.message}); }
+});
+
+// 2. Sauvegarder un niveau "Point Commun" (Classification 2)
+app.post('/api/create/classification2', async (req, res) => {
+    try {
+        const { categoryId, image1Id, image2Id } = req.body;
+        // On récupère l'ID de l'exercice "Quel est le point commun ?"
+        let exerciseId = await getExerciseIdByName("Quel est le point commun ?");
+        // Fallback si l'exercice n'existe pas encore (pour éviter le crash)
+        if (!exerciseId) return res.status(400).json({error: "Exercice 'Quel est le point commun ?' introuvable en base."});
+        const newLevelId = await createLevel(exerciseId, categoryId, image1Id, image2Id, true);
+
+        res.json({ success: true, id: newLevelId });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Erreur création niveau" });
+    }
+});
+
+// 3. Récupérer les infos d'un niveau spécifique pour le jeu
+app.get('/api/level/:id', async (req, res) => {
+    try {
+        const level = await getLevelById(req.params.id);
+        if(!level) return res.status(404).json({error: "Niveau introuvable"});
+        res.json(level);
+    } catch (e) { res.status(500).json({error: e.message}); }
+});
+
+// 4. Sauvegarder la progression (Succès/Échec)
+app.post('/api/progress', async (req, res) => {
+    try {
+        const { studentId, levelId, isSuccess } = req.body;
+        await saveProgress(studentId, levelId, isSuccess);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({error: e.message}); }
+});
+
+// --- ROUTES HTML POUR JOUER ---
+
+// Page de jeu pour "Quel est le point commun ?"
+app.get('/play/classification2/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/create_exercises/exercise_views/classification2_view.html'));
+});
 
 // --- API ROUTES ---
 // On utilise les fichiers créés dans src/routes

@@ -1,10 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Quel est le point commun ?</title>
+    <link rel="stylesheet" href="/CSS/style.css">
+    <style>
+        body { font-family: 'Comic Sans MS', sans-serif; text-align: center; background-color: #f0f8ff; }
+        .game-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .images-area { display: flex; justify-content: center; gap: 50px; margin: 30px 0; }
+        .game-img { width: 150px; height: 150px; object-fit: contain; border: 3px solid #ddd; border-radius: 10px; background: white; padding: 10px; }
+
+        .answers-area { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .answer-btn {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            background-color: #ffdc7d;
+            border: 3px solid #e67e22;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .answer-btn:hover { transform: scale(1.1); background-color: #ffeeb0; }
+        .answer-btn:active { transform: scale(0.95); }
+
+        .feedback { font-size: 2em; margin-top: 20px; font-weight: bold; min-height: 50px; }
+        .correct { color: green; }
+        .wrong { color: red; }
+
+        .back-btn { position: absolute; top: 20px; left: 20px; padding: 10px; background: #ddd; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; color: black;}
+    </style>
 </head>
 <body>
+
+<a href="/classification" class="back-btn">⬅ Retour</a>
+
+<div class="game-container">
+    <h1>Quel est le point commun ?</h1>
+
+    <div class="images-area">
+        <img id="img1" class="game-img" src="" alt="Image 1">
+        <img id="img2" class="game-img" src="" alt="Image 2">
+    </div>
+
+    <h2 style="margin-bottom: 20px;">Choisis la bonne étiquette :</h2>
+
+    <div class="answers-area" id="answers-container">
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+</div>
+
+<script>
+    // Récupération de l'ID du niveau depuis l'URL (ex: /play/classification2/15 -> ID=15)
+    const levelId = window.location.pathname.split('/').pop();
+    let correctCategoryName = "";
+
+    async function initGame() {
+        try {
+            // 1. Récupérer les infos du niveau
+            const resLevel = await fetch(`/api/level/${levelId}`);
+            if(!resLevel.ok) throw new Error("Niveau introuvable");
+            const levelData = await resLevel.json();
+
+            // Affichage des images
+            // On remplace les espaces par des _ pour matcher les fichiers (ex: "carre bleu" -> "carre_bleu.png")
+            // Adapter le chemin "/images/shapes/" selon où sont stockées vos images
+            const imgPath1 = `/images/shapes/${levelData.image1_name.replace(/ /g, '_')}.png`;
+            const imgPath2 = `/images/shapes/${levelData.image2_name.replace(/ /g, '_')}.png`;
+
+            document.getElementById('img1').src = imgPath1;
+            document.getElementById('img2').src = imgPath2;
+
+            // On stocke la bonne réponse
+            correctCategoryName = levelData.correct_category;
+
+            // 2. Récupérer toutes les catégories possibles pour faire les boutons
+            const resCats = await fetch('/api/categories');
+            const categories = await resCats.json();
+
+            const answersDiv = document.getElementById('answers-container');
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = cat.name;
+                btn.onclick = () => checkAnswer(cat.name);
+                answersDiv.appendChild(btn);
+            });
+
+        } catch (e) {
+            console.error(e);
+            document.querySelector('.game-container').innerHTML = "<p>Erreur de chargement de l'exercice.</p>";
+        }
+    }
+
+    async function checkAnswer(selectedCategory) {
+        const feedback = document.getElementById('feedback');
+        const studentId = sessionStorage.getItem('currentStudentId');
+
+        if (selectedCategory === correctCategoryName) {
+            feedback.textContent = "BRAVO ! C'est bien " + correctCategoryName + " !";
+            feedback.className = "feedback correct";
+
+            // Sauvegarde Succès
+            if(studentId) await saveResult(studentId, true);
+
+            // Petit délai puis retour (ou exercice suivant)
+            setTimeout(() => {
+                window.location.href = '/classification';
+            }, 2000);
+
+        } else {
+            feedback.textContent = "Essaie encore !";
+            feedback.className = "feedback wrong";
+
+            // Sauvegarde Échec (optionnel si on veut tracker les erreurs)
+            if(studentId) await saveResult(studentId, false);
+        }
+    }
+
+    async function saveResult(studentId, isSuccess) {
+        try {
+            await fetch('/api/progress', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    studentId: studentId,
+                    levelId: levelId,
+                    isSuccess: isSuccess
+                })
+            });
+        } catch (e) { console.error("Erreur sauvegarde", e); }
+    }
+
+    initGame();
+</script>
 
 </body>
 </html>
