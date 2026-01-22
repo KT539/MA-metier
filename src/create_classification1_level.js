@@ -16,7 +16,7 @@ export const createLevelHTMLPage = (levelId, exerciseId, categoryId, image1Name,
 </head>
 <body>
 <div class="container">
-    <a href="/create_exercises/classification_exercises?category_id=${categoryId}" class="arrow" title="Retour">←</a>
+    <a href="/classification" class="arrow" title="Retour">←</a>
     
     <h1>Pareils ou différents ?</h1>
     <p class="subtitle">Forme - couleur</p>
@@ -28,7 +28,7 @@ export const createLevelHTMLPage = (levelId, exerciseId, categoryId, image1Name,
     
     <div class="level-preview">
         <div class="image-box">
-            <img src="/images/${image1Name}.png" alt="${image1Name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <img src="/images/shapes/${image1Name}.png" alt="${image1Name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
             <div class="image-placeholder" style="display:none;">${image1Name}</div>
         </div>
         
@@ -42,33 +42,26 @@ export const createLevelHTMLPage = (levelId, exerciseId, categoryId, image1Name,
         </div>
         
         <div class="image-box">
-            <img src="/images/${image2Name}.png" alt="${image2Name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <img src="/images/shapes/${image2Name}.png" alt="${image2Name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
             <div class="image-placeholder" style="display:none;">${image2Name}</div>
         </div>
     </div>
-    
-    <div class="info-panel">
-        <p><strong>Niveau ID:</strong> ${levelId}</p>
-        <p><strong>Image 1:</strong> ${image1Name} | <strong>Image 2:</strong> ${image2Name}</p>
-    </div>
-    
     <div class="actions">
-        <a href="/create_exercises/forms/classification_form1?category_id=${categoryId}&exercise_id=${exerciseId}" class="btn btn-primary">Créer un autre niveau</a>
+        <a href="/classification" class="btn btn-primary">Valider ma réponse</a>
     </div>
 </div>
 </body>
 </html>`;
 
-    // Chemin vers le dossier de destination
+    // path
     const viewsDir = path.join(__dirname, '../views/create_exercises/exercise_views');
 
-    // Créer le dossier s'il n'existe pas
+    // create folder if it doesnt exist
     if (!fs.existsSync(viewsDir)) {
         fs.mkdirSync(viewsDir, { recursive: true });
     }
 
-    // NOMMAGE DYNAMIQUE :
-    // On utilise l'ID passé en paramètre pour construire le nom du fichier
+    // dynamically build the file's name with the parameter id
     const fileName = `classification1_level${levelId}.html`;
 
     const filePath = path.join(viewsDir, fileName);
