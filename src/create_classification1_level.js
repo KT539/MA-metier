@@ -33,23 +33,57 @@ export const createLevelHTMLPage = (levelId, exerciseId, categoryId, image1Name,
         </div>
         
         <div class="answer-buttons">
-            <button class="answer-btn ${correctAnswer === 1 ? 'correct' : ''}" data-answer="1">
-                <span class="equal-sign">=</span>
+            <button type="button" class="answer-btn" data-value="0">
+                <span class="symbol">=</span>
             </button>
-            <button class="answer-btn ${correctAnswer === 0 ? 'correct' : ''}" data-answer="0">
-                <span class="not-equal-sign">≠</span>
+            <button type="button" class="answer-btn" data-value="1">
+                <span class="symbol">≠</span>
             </button>
         </div>
+
+        <input type="hidden" id="user-selection" name="correct_answer" value="">
         
         <div class="image-box">
             <img src="/images/shapes/${image2Name}.png" alt="${image2Name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
             <div class="image-placeholder" style="display:none;">${image2Name}</div>
         </div>
     </div>
+
     <div class="actions">
-        <a href="/classification" class="btn btn-primary">Valider ma réponse</a>
+        <button id="validate-btn" class="btn btn-primary" disabled>Valider ma réponse</button>
     </div>
 </div>
+
+<script>
+    const buttons = document.querySelectorAll('.answer-btn');
+    const hiddenInput = document.getElementById('user-selection');
+    const validateBtn = document.getElementById('validate-btn');
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Désélectionner les autres
+            buttons.forEach(b => b.classList.remove('selected'));
+            
+            // Sélectionner celui-ci
+            btn.classList.add('selected');
+            
+            // Stocker la valeur (0 ou 1)
+            hiddenInput.value = btn.getAttribute('data-value');
+            
+            // Activer le bouton valider
+            validateBtn.removeAttribute('disabled');
+            validateBtn.style.opacity = "1";
+            validateBtn.style.cursor = "pointer";
+        });
+    });
+
+    validateBtn.addEventListener('click', () => {
+        const finalAnswer = hiddenInput.value;
+        console.log("Réponse enregistrée pour la DB :", finalAnswer);
+        // Ici vous pouvez ajouter votre fetch() pour envoyer finalAnswer à votre API
+        window.location.href = "/classification"; 
+    });
+</script>
 </body>
 </html>`;
 
