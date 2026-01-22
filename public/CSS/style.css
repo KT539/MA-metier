@@ -1,12 +1,33 @@
+/* Page globale */
+
+:root {
+    --combinatoire-color: #ff866d;
+    --bg-main: #fdf6c3;
+    --bg-secondary: #fff6c9;
+    --color-white: #ffffff;
+    --color-dark: #333333;
+    --cat-orange: #ffb347;
+    --cat-coral: #ff866d;
+    --cat-green: #90ee90;
+    --cat-pink: #f4b6d9;
+    --shadow-retro: 2px 2px 0px #000;
+    --transition-fast: 0.15s ease-in-out;
+}
+
+/* Style global */
 body {
-    background-color: #fdf6c3;
+    background-color: var(--bg-main);
     font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
     text-align: center;
     padding: 20px;
 }
 
-h1 { font-size: 3rem; margin-bottom: 30px; }
+h1 {
+    font-size: 3rem;
+    margin-bottom: 30px;
+}
 
+/* Layout principal */
 .main-container {
     display: flex;
     justify-content: space-around;
@@ -23,10 +44,11 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
 }
 
 .student-slot {
-    background: white;
-    border: 2px solid #333;
+    background: var(--color-white);
+    border: 2px solid var(--color-dark);
     width: 100px;
     padding: 5px;
+    transition: transform var(--transition-fast);
 }
 
 .placeholder-img {
@@ -45,9 +67,9 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
     object-fit: contain;
 }
 
-/* Combinatoire page */
+/* Page combinatoire */
 .page-combinatoire {
-    background-color: #fff6c9;
+    background-color: var(--bg-secondary);
     text-align: left;
 }
 
@@ -71,9 +93,14 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
 .page-combinatoire .arrow {
     width: 45px;
     height: 45px;
-    background: #ff866d;
+    background: var(--combinatoire-color);
     clip-path: polygon(100% 0, 0 50%, 100% 100%);
     cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.page-combinatoire .arrow:hover {
+    transform: scale(1.1);
 }
 
 .page-combinatoire .section {
@@ -84,11 +111,12 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
 .page-combinatoire .section h2 {
     font-size: 1.4rem;
     margin-bottom: 10px;
-    color: #ff866d;
+    color: var(--combinatoire-color);
     font-weight: bold;
     text-decoration: underline;
 }
 
+/* Grille de boutons niveaux */
 .page-combinatoire .button-grid {
     display: flex;
     flex-wrap: wrap;
@@ -105,15 +133,15 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
     height: 55px;
     border-radius: 50%;
     font-size: 1.3rem;
-    background-color: white;
-    border: 3px solid #333;
+    background-color: var(--color-white);
+    border: 3px solid var(--color-dark);
     cursor: pointer;
     font-weight: bold;
-    box-shadow: 2px 2px 0px #000;
+    box-shadow: 2px 2px 0px var(--shadow-retro);
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: 0.15s;
+    transition: var(--transition-fast);
     padding: 0;
 }
 
@@ -128,37 +156,50 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
 }
 
 /* Sidebar & Boutons */
-.sidebar { width: 300px; display: flex; flex-direction: column; gap: 40px; }
+.sidebar {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
 
 .prof-space input {
     display: block;
     width: 100%;
     margin: 5px 0;
     padding: 10px;
-    border: 2px solid #333;
+    border: 2px solid var(--color-dark);
 }
 
 .cat-btn {
     display: block;
     margin: 10px 0;
     padding: 15px;
-    border: 2px solid #333;
+    border: 2px solid var(--color-dark);
     border-radius: 10px;
     text-decoration: none;
     color: black;
     font-weight: bold;
     font-size: 1.5rem;
-    box-shadow: 2px 2px 0px #000;
+    box-shadow: 2px 2px 0px var(--shadow-retro);
+    transition: var(--transition-fast) box-shadow; var(--transition-fast);
+}
+
+.cat-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+}
+
+.cat-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
 }
 
 /* Specific colors */
-.cat-orange { background-color: #ffb347; }
-.cat-coral  { background-color: #ff866d; }
-.cat-green  { background-color: #90ee90; }
-.cat-pink   { background-color: #f4b6d9; }
-
-.cat-btn:active { transform: translate(2px, 2px); box-shadow: none; }
-
+.cat-orange { background-color: var(--cat-orange); }
+.cat-coral  { background-color: var(--cat-coral); }
+.cat-green  { background-color: var(--cat-green); }
+.cat-pink   { background-color: var(--cat-pink); }
 
 /* Responsive */
 @media (max-width: 1024px) {
@@ -188,7 +229,9 @@ h1 { font-size: 3rem; margin-bottom: 30px; }
         padding: 15px;
     }
 
-    h1 { font-size: 2rem; }
+    h1 {
+        font-size: 2rem;
+    }
 
     .cat-btn {
         font-size: 1.2rem;
