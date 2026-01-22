@@ -178,4 +178,100 @@ export const createLevel = (exerciseId, categoryId, imageId1, imageId2, correctA
     });
 };
 
+// Récupérer les niveaux pour un type d'exercice donné (par nom)
+export const getLevelsByExerciseName = (exerciseName) => {
+    return new Promise((resolve, reject) => {
+        // On joint les tables level et exercise pour filtrer par nom d'exercice
+        const sql = `
+            SELECT l.id, l.exercise_id 
+            FROM level l
+            JOIN exercise e ON l.exercise_id = e.id
+            WHERE e.name = ?
+            ORDER BY l.id ASC
+        `;
+        db.query(sql, [exerciseName], (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+};
+
+// --- FONCTIONS SUPPLÉMENTAIRES (Classification 2 & Général) ---
+
+// Récupérer toutes les catégories (pour le formulaire de création)
+export const getCategories = () => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM category`;
+        db.query(sql, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+};
+
+// Récupérer un niveau par son ID avec les détails (Images + Catégorie/Réponse)
+// Récupérer un niveau par son ID avec les NOMS des images pour construction dynamique
+export const getLevelById = (levelId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT
+                l.id,
+                l.correct_answer,
+                i1.name as image1_name, -- On a besoin du NOM (ex: "carre bleu")
+                i2.name as image2_name
+            FROM level l
+                     LEFT JOIN image i1 ON l.image_id_1 = i1.id
+                     LEFT JOIN image i2 ON l.image_id_2 = i2.id
+            WHERE l.id = ?
+        `;
+        db.query(sql, [levelId], (err, result) => {
+            if (err) reject(err);
+            else resolve(result[0]);
+        });
+    });
+};
+
+// Sauvegarder la progression de l'élève
+export const saveProgress = (studentId, levelId, isSuccess) => {
+    return new Promise((resolve, reject) => {
+        // On vérifie d'abord si une progression existe déjà
+        const checkSql = `SELECT * FROM progress WHERE student_id = ? AND level_id = ?`;
+
+        db.query(checkSql, [studentId, levelId], (err, results) => {
+            if (err) return reject(err);
+
+            if (results.length > 0) {
+                // Mise à jour : on incrémente le succès si c'est réussi
+                if (isSuccess) {
+                    const updateSql = `UPDATE progress SET success_count = success_count + 1, is_completed = 1 WHERE id = ?`;
+                    db.query(updateSql, [results[0].id], (e, r) => {
+                        if (e) reject(e); else resolve(r);
+                    });
+                } else {
+                    resolve({ message: "Échec enregistré (pas de changement)" });
+                }
+            } else {
+                // Création
+                const insertSql = `INSERT INTO progress (student_id, level_id, success_count, is_completed) VALUES (?, ?, ?, ?)`;
+                // Si réussi du premier coup, success=1, completed=1. Sinon 0.
+                const successVal = isSuccess ? 1 : 0;
+                db.query(insertSql, [studentId, levelId, successVal, successVal], (e, r) => {
+                    if (e) reject(e); else resolve(r);
+                });
+            }
+        });
+    });
+};
+
+// Récupérer l'ID d'un exercice par son nom (Utile pour la création)
+export const getExerciseIdByName = (name) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT id FROM exercise WHERE name = ?`;
+        db.query(sql, [name], (err, res) => {
+            if (err) reject(err);
+            else resolve(res[0] ? res[0].id : null);
+        });
+    });
+};
+
 export default db;
