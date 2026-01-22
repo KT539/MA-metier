@@ -97,12 +97,22 @@ app.get('/api/categories', async (req, res) => {
 // 2. Sauvegarder un niveau "Point Commun" (Classification 2)
 app.post('/api/create/classification2', async (req, res) => {
     try {
-        const { categoryId, image1Id, image2Id } = req.body;
-        // On récupère l'ID de l'exercice "Quel est le point commun ?"
-        let exerciseId = await getExerciseIdByName("Quel est le point commun ?");
-        // Fallback si l'exercice n'existe pas encore (pour éviter le crash)
-        if (!exerciseId) return res.status(400).json({error: "Exercice 'Quel est le point commun ?' introuvable en base."});
-        const newLevelId = await createLevel(exerciseId, categoryId, image1Id, image2Id, true);
+        // correctAnswer : 0 pour Forme, 1 pour Couleur
+        const { image1Id, image2Id, correctAnswer } = req.body;
+
+        // 1. Récupérer l'ID de l'exercice
+        const exerciseId = await getExerciseIdByName("Quel est le point commun ?");
+
+        // 2. Récupérer l'ID de la catégorie "Classification"
+        const categories = await getCategories();
+        const classificationCat = categories.find(c => c.name === 'Classification');
+
+        if (!exerciseId || !classificationCat) {
+            return res.status(500).json({error: "Configuration base de données incomplète (Exercice ou Catégorie manquant)"});
+        }
+
+        // On crée le niveau avec la bonne réponse (0 ou 1)
+        const newLevelId = await createLevel(exerciseId, classificationCat.id, image1Id, image2Id, correctAnswer);
 
         res.json({ success: true, id: newLevelId });
     } catch (e) {

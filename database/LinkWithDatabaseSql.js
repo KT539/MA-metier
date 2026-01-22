@@ -210,20 +210,18 @@ export const getCategories = () => {
 };
 
 // Récupérer un niveau par son ID avec les détails (Images + Catégorie/Réponse)
+// Récupérer un niveau par son ID avec les NOMS des images pour construction dynamique
 export const getLevelById = (levelId) => {
     return new Promise((resolve, reject) => {
         const sql = `
-            SELECT 
-                l.id, 
-                l.correct_answer, -- Utilisé pour classification 1 (Vrai/Faux)
-                c.name as correct_category, -- Utilisé pour classification 2 (La réponse attendue)
-                c.id as category_id,
-                i1.name as image1_name,
+            SELECT
+                l.id,
+                l.correct_answer,
+                i1.name as image1_name, -- On a besoin du NOM (ex: "carre bleu")
                 i2.name as image2_name
             FROM level l
-            LEFT JOIN category c ON l.category_id = c.id
-            LEFT JOIN image i1 ON l.image_id_1 = i1.id
-            LEFT JOIN image i2 ON l.image_id_2 = i2.id
+                     LEFT JOIN image i1 ON l.image_id_1 = i1.id
+                     LEFT JOIN image i2 ON l.image_id_2 = i2.id
             WHERE l.id = ?
         `;
         db.query(sql, [levelId], (err, result) => {

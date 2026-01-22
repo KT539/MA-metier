@@ -8,14 +8,12 @@
 </head>
 <body>
 <div class="container">
-    <a href="#" id="back-to-exercises" class="arrow" title="Retour"></a>
+    <a href="/create_exercises/classification_exercises" id="back-to-exercises" class="arrow" title="Retour"></a>
 
     <h1>Configuration</h1>
     <p class="category-label">Quel est le point commun ?</p>
 
     <form id="exercise-config-form">
-        <input type="hidden" name="exercise_id" id="hidden_exercise_id">
-
         <div class="form-group">
             <label for="image-base">Image de base :</label>
             <select id="image-base" name="image_id_1" required>
@@ -33,10 +31,10 @@
         <div class="form-group">
             <label>Critère commun :</label>
             <div class="answer-selection">
-                <input type="radio" id="shape" name="correct_answer" value="Forme" checked>
+                <input type="radio" id="shape" name="correct_answer" value="0" checked>
                 <label for="shape" class="radio-card-text">Même forme</label>
 
-                <input type="radio" id="color" name="correct_answer" value="Couleur">
+                <input type="radio" id="color" name="correct_answer" value="1">
                 <label for="color" class="radio-card-text">Même couleur</label>
             </div>
         </div>
@@ -46,82 +44,43 @@
 </div>
 
 <script>
-    // Variables globales
     let loadedImages = [];
-    let categoriesMap = {}; // Pour stocker les ID : { "Forme": 5, "Couleur": 6 }
 
     document.addEventListener("DOMContentLoaded", async function() {
-        // 1. Gestion du bouton retour
-        const params = new URLSearchParams(window.location.search);
-        const catId = params.get('category_id');
-        const exId = params.get('exercise_id');
-        const backBtn = document.getElementById('back-to-exercises');
-
-        // On construit le lien de retour vers le menu de création
-        let backUrl = `/create_exercises/classification_exercises`;
-        if (catId) backUrl += `?category_id=${catId}`;
-        backBtn.href = backUrl;
-
-        if (exId) {
-            document.getElementById('hidden_exercise_id').value = exId;
-        }
-
-        // 2. Chargement des images et des catégories en parallèle
+        // Chargement des images (Formes uniquement)
         const selectBase = document.getElementById('image-base');
         const selectComp = document.getElementById('image-comp');
 
         try {
-            const [resImages, resCats] = await Promise.all([
-                fetch('/api/shapes-images'),
-                fetch('/api/categories')
-            ]);
+            const response = await fetch('/api/shapes-images');
+            loadedImages = await response.json();
 
-            loadedImages = await resImages.json();
-            const categories = await resCats.json();
-
-            // Remplissage des selecteurs d'images
             loadedImages.forEach(img => {
                 const option = document.createElement('option');
                 option.value = img.id;
                 option.textContent = img.name;
-
                 selectBase.appendChild(option.cloneNode(true));
                 selectComp.appendChild(option);
             });
-
-            // Création du mapping Nom -> ID pour les catégories
-            // On cherche l'ID correspondant au nom "Forme" ou "Couleur" dans la BDD
-            categories.forEach(c => {
-                // On normalise le nom pour éviter les soucis de majuscules (ex: "forme", "Forme")
-                // On suppose que ta BDD contient des catégories nommées "Forme" et "Couleur"
-                if(c.name.toLowerCase().includes('forme')) categoriesMap['Forme'] = c.id;
-                if(c.name.toLowerCase().includes('couleur')) categoriesMap['Couleur'] = c.id;
-            });
-
-            console.log("Catégories chargées:", categoriesMap);
-
         } catch (error) {
-            console.error("Erreur lors du chargement des données:", error);
-            alert("Erreur de connexion au serveur.");
+            console.error("Erreur chargement images:", error);
         }
     });
 
-    // --- FONCTION UTILITAIRE POUR DÉCOUPER LE NOM ---
-    // Ex: "carre bleu" -> renvoie { shape: "carre", color: "bleu" }
+    // Utilitaire pour extraire {shape, color} du nom "carre bleu"
     function extractInfo(fullName) {
         if (!fullName) return { shape: "", color: "" };
         const parts = fullName.trim().split(' ');
-        const shape = parts[0];
-        const color = parts.slice(1).join(' ');
-        return { shape, color };
+        return { shape: parts[0], color: parts.slice(1).join(' ') };
     }
 
-    // --- SOUMISSION DU FORMULAIRE ---
+    // Soumission
     document.getElementById('exercise-config-form').addEventListener('submit', async function(e) {
-        e.preventDefault(); // On empêche le rechargement de page classique
+        e.preventDefault();
 
         const img1Id = document.getElementById('image-base').value;
         const img2Id = document.getElementById('image-comp').value;
+        const answerVal = document.querySelector('input[name="correct_answer"]:checked').value; // "0" ou "1"
 
         if (!img1Id || !img2Id) {
             alert("Veuillez sélectionner les deux images.");
@@ -131,61 +90,43 @@
         // Validation Logique
         const img1Data = loadedImages.find(img => img.id == img1Id);
         const img2Data = loadedImages.find(img => img.id == img2Id);
-        if (!img1Data || !img2Data) return;
 
         const info1 = extractInfo(img1Data.name);
         const info2 = extractInfo(img2Data.name);
 
-        // Valeur radio sélectionnée : "Forme" ou "Couleur"
-        const selectedKey = document.querySelector('input[name="correct_answer"]:checked').value;
-
-        if (selectedKey === 'Forme') {
+        if (answerVal === "0") { // Forme
             if (info1.shape !== info2.shape) {
-                alert(`Logique incorrecte :\nL'image 1 est un(e) "${info1.shape}"\nL'image 2 est un(e) "${info2.shape}"\n\nElles n'ont pas la même forme !`);
+                alert("Erreur : Les images n'ont pas la même forme !");
                 return;
             }
-        }
-        else if (selectedKey === 'Couleur') {
+        } else { // Couleur (1)
             if (info1.color !== info2.color) {
-                alert(`Logique incorrecte :\nL'image 1 est "${info1.color}"\nL'image 2 est "${info2.color}"\n\nElles n'ont pas la même couleur !`);
+                alert("Erreur : Les images n'ont pas la même couleur !");
                 return;
             }
-        }
-
-        // Récupération de l'ID BDD correspondant (ex: ID 5 pour "Forme")
-        const finalCategoryId = categoriesMap[selectedKey];
-
-        if (!finalCategoryId) {
-            alert(`Erreur : La catégorie "${selectedKey}" n'a pas été trouvée dans la base de données. Vérifiez la table 'category'.`);
-            return;
         }
 
         // Envoi au serveur
-        const data = {
-            categoryId: finalCategoryId,
-            image1Id: img1Id,
-            image2Id: img2Id
-        };
-
         try {
             const res = await fetch('/api/create/classification2', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify({
+                    image1Id: img1Id,
+                    image2Id: img2Id,
+                    correctAnswer: parseInt(answerVal) // Envoie 0 ou 1
+                })
             });
 
             const result = await res.json();
-
             if (result.success) {
                 alert("Niveau créé avec succès !");
-                // Optionnel : Réinitialiser le formulaire
-                // document.getElementById('exercise-config-form').reset();
             } else {
-                alert("Erreur lors de la sauvegarde : " + (result.error || "Inconnue"));
+                alert("Erreur : " + result.error);
             }
         } catch (err) {
             console.error(err);
-            alert("Erreur de communication avec le serveur.");
+            alert("Erreur serveur.");
         }
     });
 </script>
