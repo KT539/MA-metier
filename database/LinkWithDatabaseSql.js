@@ -209,8 +209,7 @@ export const getCategories = () => {
     });
 };
 
-// Récupérer un niveau par son ID avec les détails (Images + Catégorie/Réponse)
-// Récupérer un niveau par son ID avec les NOMS des images pour construction dynamique
+// Récupérer un niveau par son ID avec les détails (images dynamiques, catégorie et réponse)
 export const getLevelById = (levelId) => {
     return new Promise((resolve, reject) => {
         const sql = `
