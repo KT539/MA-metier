@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Préparation des données à envoyer
             const data = {
                 username: username,
-                password_hash: password // Attention : envoyé en clair (à hasher)
+                password_hash: password // envoyé en clair mais oke
             };
 
             try {

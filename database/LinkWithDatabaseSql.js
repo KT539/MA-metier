@@ -27,16 +27,27 @@ export const createTeacher = (username, password) => {
     });
 };
 
-export const getTeacherByCredentials = (username, password) => {
+export const getTeacherByUsername = (username) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT id, username FROM teacher WHERE username = ? AND password_hash = ?`;
-        db.query(sql, [username, password], (err, results) => {
+        // On récupère le hash stocké pour pouvoir le comparer ensuite
+        const sql = `SELECT id, username, password_hash FROM teacher WHERE username = ?`;
+        db.query(sql, [username], (err, results) => {
             if (err) reject(err);
-            // MySQL retourne un tableau, on prend le premier élément
-            else resolve(results[0]);
+            else resolve(results[0]); // Retourne undefined si pas trouvé
         });
     });
 };
+
+// export const getTeacherByCredentials = (username, password) => {
+//    return new Promise((resolve, reject) => {
+//        const sql = `SELECT id, username FROM teacher WHERE username = ? AND password_hash = ?`;
+//        db.query(sql, [username, password], (err, results) => {
+//            if (err) reject(err);
+//            // MySQL retourne un tableau, on prend le premier élément
+//            else resolve(results[0]);
+//        });
+//    });
+// };
 
 // --- FONCTIONS CLASSES (Adaptées pour la liaison N:N) ---
 
