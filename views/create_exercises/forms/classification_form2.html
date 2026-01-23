@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Exercice - Point Commun</title>
+    <link rel="stylesheet" href="/CSS/classification_form.css">
+</head>
+<body>
+<div class="container">
+    <a href="/create_exercises/classification_exercises" id="back-to-exercises" class="arrow" title="Retour"></a>
+
+    <h1>Configuration</h1>
+    <p class="category-label">Quel est le point commun ?</p>
+
+    <form id="exercise-config-form">
+        <div class="form-group">
+            <label for="image-base">Image de base :</label>
+            <select id="image-base" name="image_id_1" required>
+                <option value="">-- Veuillez choisir une image --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="image-comp">Image de comparaison :</label>
+            <select id="image-comp" name="image_id_2" required>
+                <option value="">-- Veuillez choisir une image --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Critère commun :</label>
+            <div class="answer-selection">
+                <input type="radio" id="shape" name="correct_answer" value="0" checked>
+                <label for="shape" class="radio-card-text">Même forme</label>
+
+                <input type="radio" id="color" name="correct_answer" value="1">
+                <label for="color" class="radio-card-text">Même couleur</label>
+            </div>
+        </div>
+
+        <button type="submit" class="cat-btn cat-orange">Générer le niveau</button>
+    </form>
+</div>
+
+<script>
+    let loadedImages = [];
+
+    document.addEventListener("DOMContentLoaded", async function() {
+        // Chargement des images (Formes uniquement)
+        const selectBase = document.getElementById('image-base');
+        const selectComp = document.getElementById('image-comp');
+
+        try {
+            const response = await fetch('/api/shapes-images');
+            loadedImages = await response.json();
+
+            loadedImages.forEach(img => {
+                const option = document.createElement('option');
+                option.value = img.id;
+                option.textContent = img.name;
+                selectBase.appendChild(option.cloneNode(true));
+                selectComp.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Erreur chargement images:", error);
+        }
+    });
+
+    // Utilitaire pour extraire {shape, color} du nom "carre bleu"
+    function extractInfo(fullName) {
+        if (!fullName) return { shape: "", color: "" };
+        const parts = fullName.trim().split(' ');
+        return { shape: parts[0], color: parts.slice(1).join(' ') };
+    }
+
+    // Soumission
+    document.getElementById('exercise-config-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const img1Id = document.getElementById('image-base').value;
+        const img2Id = document.getElementById('image-comp').value;
+        const answerVal = document.querySelector('input[name="correct_answer"]:checked').value; // "0" ou "1"
+
+        if (!img1Id || !img2Id) {
+            alert("Veuillez sélectionner les deux images.");
+            return;
+        }
+
+        // Validation Logique
+        const img1Data = loadedImages.find(img => img.id == img1Id);
+        const img2Data = loadedImages.find(img => img.id == img2Id);
+
+        const info1 = extractInfo(img1Data.name);
+        const info2 = extractInfo(img2Data.name);
+
+        if (answerVal === "0") { // Forme
+            if (info1.shape !== info2.shape) {
+                alert("Erreur : Les images n'ont pas la même forme !");
+                return;
+            }
+        } else { // Couleur (1)
+            if (info1.color !== info2.color) {
+                alert("Erreur : Les images n'ont pas la même couleur !");
+                return;
+            }
+        }
+
+        // Envoi au serveur bd
+        try {
+            const res = await fetch('/api/create/classification2', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    image1Id: img1Id,
+                    image2Id: img2Id,
+                    correctAnswer: parseInt(answerVal) // Envoie 0 ou 1
+                })
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                alert("Niveau créé avec succès !");
+            } else {
+                alert("Erreur : " + result.error);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erreur serveur.");
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,16 +1,21 @@
 import express from 'express';
+import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-import db, { createStudent, getClassProgress, getStudentsByClass, updateStudent, deleteStudent } from '../../database/LinkWIthDatabaseSql.js';
-
 const router = express.Router();
+import { fileURLToPath } from 'url';
+// import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/Sqlite_Deprecated/Database.js';
+import db, { createStudent, getClassProgress, getStudentsByClass, updateStudent, deleteStudent  } from '../../database/LinkWithDatabaseSql.js';
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --- 1. Récupérer les élèves d'une classe ---
+// Définition du chemin pour les images
+const dossierStatic = path.join(__dirname, '../../public/images/animaux');
+app.use(express.static(dossierStatic));
+
+
+// Récupérer les élèves d'une classe
 router.get('/:classId', async (req, res) => {
     try {
         const students = await getStudentsByClass(req.params.classId);
@@ -20,7 +25,7 @@ router.get('/:classId', async (req, res) => {
     }
 });
 
-// --- 2. Ajouter un élève (RESTRICTION ID 1 à 25) ---
+// Ajouter un élève
 router.post('/', async (req, res) => {
     const { name, classId } = req.body;
     if (!name || !classId) {
@@ -40,31 +45,45 @@ router.post('/', async (req, res) => {
         if (imagesAvatars.length === 0) {
             return res.status(500).json({ error: "Aucune image trouvée entre l'ID 1 et 25." });
         }
+        let files = [];
+        try {
+            files = fs.readdirSync(dossierStatic);
+        } catch (e) {
+            console.error("Erreur lecture dossier images:", e);
+            return res.status(500).json({ error: "Dossier images introuvable sur le serveur." });
+        }
+        // 1. Sélection des images dans le dossier (PNG ou JPG)
+        const touteslesImages = files.filter(file =>
+            file.toLowerCase().endsWith('.png') || file.toLowerCase().endsWith('.jpg')
+        );
 
-        // B. Récupérer les images DÉJÀ PRISES par les élèves
-        const imagesPrises = await new Promise((resolve, reject) => {
-            const sql = `SELECT i.name FROM student s JOIN image i ON s.image_id = i.id`;
-            db.query(sql, (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows.map(row => row.name));
+        // 2. Vérifier en BDD les animaux déjà pris
+        const animauxPris = await new Promise((resolve, reject) => {
+            db.query(`SELECT animal_image FROM student`, [], (dbErr, rows) => {
+                if (dbErr) reject(dbErr);
+                else resolve(rows.map(row => row.animal_image));
             });
         });
 
-        // C. Trouver les dispos (Différence entre les 25 avatars et ceux pris)
-        const animauxDisponibles = imagesAvatars.filter(img => !imagesPrises.includes(img));
+        // 3. Trouver les images disponibles
+        const animauxDisponibles = touteslesImages.filter(animal => !animauxPris.includes(animal));
 
         if (animauxDisponibles.length === 0) {
-            return res.status(400).json({ error: "Plus d'avatars disponibles (les 25 sont pris) !" });
+            return res.status(400).json({
+                error: "Désolé, tous les avatars sont déjà pris ! Ajoutez de nouvelles images."
+            });
         }
 
-        // D. Choix aléatoire
+        // 4. Choix aléatoire de l'image
         const animalChoisi = animauxDisponibles[Math.floor(Math.random() * animauxDisponibles.length)];
+
+        // 5. Création de l'élève
         const studentId = await createStudent(name, animalChoisi, classId);
 
         res.json({ success: true, id: studentId, image: animalChoisi });
 
     } catch (err) {
-        console.error("Erreur POST student:", err);
+        console.error(err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -96,7 +115,7 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// --- 5. Récupérer la progression ---
+// Récupérer la progression d'une classe
 router.get('/progress/:classId', async (req, res) => {
     try {
         const progress = await getClassProgress(req.params.classId);

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuration Exercice</title>
-    <link rel="stylesheet" href="/CSS/classification1_form.css">
+    <link rel="stylesheet" href="/CSS/classification_form.css">
 </head>
 <body>
 <div class="container">
@@ -13,49 +13,88 @@
     <h1>Configuration</h1>
     <p class="category-label">Pareils ou différents ?</p>
 
-    <form id="exercise-config-form">
+    <form id="exercise-config-form" action="/votre-route-de-sauvegarde" method="POST">
+        <input type="hidden" name="category_id" id="hidden_category_id">
+        <input type="hidden" name="exercise_id" id="hidden_exercise_id">
+
         <div class="form-group">
             <label for="image-base">Image de base :</label>
-            <select id="image-base" name="image-base">
-                <option value="carre_rouge.png">Carré Rouge</option>
-                <option value="rond_bleu.png">Rond Bleu</option>
+            <select id="image-base" name="image_id_1">
+                <option value="">-- Veuillez choisir une image --</option>
             </select>
         </div>
 
         <div class="form-group">
             <label for="image-comp">Image de comparaison :</label>
-            <select id="image-comp" name="image-comp">
-                <option value="carre_rouge.png">Carré Rouge</option>
-                <option value="triangle_vert.png">Triangle Vert</option>
+            <select id="image-comp" name="image_id_2">
+                <option value="">-- Veuillez choisir une image --</option>
             </select>
         </div>
 
         <div class="form-group">
             <label>Réponse correcte :</label>
             <div class="answer-selection">
-                <input type="radio" id="equal" name="correct-answer" value="same" checked>
+                <input type="radio" id="equal" name="correct_answer" value="1" checked>
                 <label for="equal" class="radio-card">=</label>
 
-                <input type="radio" id="not-equal" name="correct-answer" value="different">
+                <input type="radio" id="not-equal" name="correct_answer" value="0">
                 <label for="not-equal" class="radio-card">≠</label>
             </div>
         </div>
 
-        <button type="submit" class="cat-btn cat-orange">Générer l'exercice</button>
+        <button type="submit" class="cat-btn cat-orange">Générer le niveau</button>
     </form>
 </div>
 <script>
-    const params = new URLSearchParams(window.location.search);
-    const catId = params.get('category_id');
-    const backBtn = document.getElementById('back-to-exercises');
+    document.addEventListener("DOMContentLoaded", async function() {
+        // get IDs from current URL
+        const params = new URLSearchParams(window.location.search);
+        const catId = params.get('category_id');
+        const exId = params.get('exercise_id');
+        const backBtn = document.getElementById('back-to-exercises');
 
-    if (catId) {
-        // send back to exercise selection while saving category_id
-        backBtn.setAttribute('href', `/create_exercises/classification_exercises?category_id=${catId}`);
-    } else {
-        // default send-back if ID is lost
-        backBtn.setAttribute('href', `/create_exercises/classification_exercises`);
-    }
+        if (catId) {
+            document.getElementById('hidden_category_id').value = catId;
+            backBtn.href = `/create_exercises/classification_exercises?category_id=${catId}`;
+        } else {
+            backBtn.href = `/create_exercises/classification_exercises`;
+        }
+
+        if (exId) {
+            document.getElementById('hidden_exercise_id').value = exId;
+        }
+
+        // load images from API
+        const selectBase = document.getElementById('image-base');
+        const selectComp = document.getElementById('image-comp');
+
+        try {
+            const response = await fetch('/api/shapes-images');
+            const images = await response.json();
+
+            images.forEach(img => {
+                const option = document.createElement('option');
+                option.value = img.id;
+                option.textContent = img.name;
+
+                selectBase.appendChild(option.cloneNode(true));
+                selectComp.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Erreur lors du chargement des images:", error);
+        }
+    });
+
+    // validation
+    document.getElementById('exercise-config-form').addEventListener('submit', function(e) {
+        const img1 = document.getElementById('image-base').value;
+        const img2 = document.getElementById('image-comp').value;
+
+        if (!img1 || !img2) {
+            e.preventDefault();
+            alert("Veuillez sélectionner les deux images pour l'exercice.");
+        }
+    });
 </script>
 </body>
 </html>

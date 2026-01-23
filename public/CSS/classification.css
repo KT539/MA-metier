@@ -1,18 +1,88 @@
+/* Page Classification */
+
+:root {
+    --color-main: #FFC367;
+    --color-bg: #fdf6c3;
+    --color-text: #333333;
+    --transition-fast: 0.2s ease;
+}
+
+/* Style global */
 body {
-    background-color: #fdf6c3;
+    background-color: var(--color-bg);
     font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
     text-align: center;
     padding: 20px;
+    margin: 0;
+    color: var(--color-text);
 }
 
-h1 { font-size: 3rem; margin-bottom: 30px; color: #FFC367; }
+/* Titres */
+h1 {
+    font-size: 3rem;
+    margin-bottom: 30px;
+    color: var(--color-main);
+}
 
-h2 { color: #FFC367; text-decoration: underline;text-underline-offset: 8px; text-decoration-thickness: 2px;font-weight: normal;font-size: 2.5rem; text-align: left;}
+h2 {
+    color: var(--color-main);
+    text-decoration: underline;
+    text-underline-offset: 8px;
+    text-decoration-thickness: 2px;
+    font-weight: normal;
+    font-size: 2.5rem;
+    text-align: left;
+}
 
-img { max-width: 10%; height: auto;}
+/* Header et éléments graphiques */
+img {
+    max-width: 10%;
+    height: auto;
+}
 
-#div-header { display: flex; align-items: center; justify-content: centre; gap: 20px; margin-top: 20px; margin-bottom: 40px;}
+#div-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
 
-.arrow {width: 60px; height: 60px; background: #FFC367; border-color: black; clip-path: polygon(0% 50%, 30% 0%, 30% 30%, 100% 30%, 100% 70%, 30% 70%, 30% 100%); cursor: pointer; margin: 0; }
+.arrow {
+    width: 60px;
+    height: 60px;
+    background: var(--color-main);
+    border-color: black;
+    clip-path: polygon(0% 50%, 30% 0%, 30% 30%, 100% 30%, 100% 70%, 30% 70%, 30% 100%);
+    cursor: pointer;
+    margin: 0;
+    transition: all 0.2s ease-in-out;
+}
 
-.exercises-grid { display: flex; flex-wrap: wrap; gap: 15px; padding: 20px; max-width: 60%;}
+/* Feedback visuel sur la flèche */
+.arrow:hover {
+    transform: scale(1.1);
+    filter: brightness(1.1);
+}
+
+/* Grille d'exercices */
+.exercises-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 20px;
+    max-width: 60%;
+    margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.8rem; text-align: center; }
+
+    .exercises-grid {
+        justify-content: center;
+        max-width: 100%;
+    }
+}
