@@ -33,6 +33,7 @@ router.post('/', async (req, res) => {
     }
 
     try {
+        // 1. Lire les fichiers dans le dossier
         let files = [];
         try {
             files = fs.readdirSync(dossierStatic);
@@ -40,35 +41,48 @@ router.post('/', async (req, res) => {
             console.error("Erreur lecture dossier images:", e);
             return res.status(500).json({ error: "Dossier images introuvable sur le serveur." });
         }
-        // 1. Sélection des images dans le dossier (PNG ou JPG)
-        const touteslesImages = files.filter(file =>
+        // On ne garde que les images
+        const imageFiles = files.filter(file =>
             file.toLowerCase().endsWith('.png') || file.toLowerCase().endsWith('.jpg')
         );
 
-        // 2. Vérifier en BDD les animaux déjà pris
+        // 2. Vérifier en BDD les animaux déjà pris par d'autres élèves
+        // On récupère le nom de l'image (ex: 'chat bleu fonce') via l'ID stocké.
         const animauxPris = await new Promise((resolve, reject) => {
-            db.query(`SELECT animal_image FROM student`, [], (dbErr, rows) => {
+            const sql = `SELECT i.name 
+                         FROM student s 
+                         JOIN image i ON s.image_id = i.id`;
+
+            db.query(sql, [], (dbErr, rows) => {
                 if (dbErr) reject(dbErr);
-                else resolve(rows.map(row => row.animal_image));
+                else resolve(rows.map(row => row.name)); // Retourne liste : ['chat bleu fonce', 'chien brun', ...]
             });
         });
 
         // 3. Trouver les images disponibles
-        const animauxDisponibles = touteslesImages.filter(animal => !animauxPris.includes(animal));
+        // On filtre les fichiers du dossier en comparant leur "nom converti" avec la liste de la BDD.
+        const fichiersDisponibles = imageFiles.filter(filename => {
+            // Conversion : 'chat_bleu_fonce.png' -> 'chat bleu fonce' pour correspondre à la BDD
+            const nomFormatBDD = filename.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
+            return !animauxPris.includes(nomFormatBDD);
+        });
 
-        if (animauxDisponibles.length === 0) {
+        if (fichiersDisponibles.length === 0) {
             return res.status(400).json({
                 error: "Désolé, tous les avatars sont déjà pris ! Ajoutez de nouvelles images."
             });
         }
 
-        // 4. Choix aléatoire de l'image
-        const animalChoisi = animauxDisponibles[Math.floor(Math.random() * animauxDisponibles.length)];
+        // 4. Choix aléatoire d'un fichier (ex: 'lapin_rose.png')
+        const fichierChoisi = fichiersDisponibles[Math.floor(Math.random() * fichiersDisponibles.length)];
 
         // 5. Création de l'élève
-        const studentId = await createStudent(name, animalChoisi, classId);
+        const nomPourBDD = fichierChoisi.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
 
-        res.json({ success: true, id: studentId, image: animalChoisi });
+        const studentId = await createStudent(name, nomPourBDD, classId);
+
+        // On renvoie le fichier (pour l'affichage web) et l'ID
+        res.json({ success: true, id: studentId, image: fichierChoisi });
 
     } catch (err) {
         console.error(err);
