@@ -124,16 +124,48 @@
 
 /* Réglages responsive */
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .page-seriation .classification-container {
-        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 0;
+        width: 100%;
+    }
+
+    .page-seriation .section {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 40px;
     }
 
     .page-seriation .button-grid {
-        justify-content: center;
+        display: grid !important;
+        grid-template-columns: repeat(5, 65px) !important;
+        gap: 15px !important;
+        justify-content: center !important;
+        width: auto !important;
+        margin: 20px 0 !important;
     }
 
-    .page-seriation .button-grid .level-break {
-        margin-right: 12px;
+    .page-seriation .button-grid button,
+    .page-seriation .level-break {
+        width: 65px !important;
+        height: 65px !important;
+        margin: 0 !important;
+        box-sizing: border-box;
+        display: flex !important;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .page-seriation .level-break {
+        background: var(--color-white);
+        border: 3px solid var(--color-black);
+        border-radius: 50%;
+        font-weight: bold;
+        box-shadow: var(--shadow-btn);
     }
 }
