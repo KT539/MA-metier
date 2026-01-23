@@ -4,7 +4,7 @@ import path from 'path';
 const router = express.Router();
 import { fileURLToPath } from 'url';
 // import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/Sqlite_Deprecated/Database.js';
-import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/LinkWithDatabaseSql.js';
+import db, { createStudent, getClassProgress, getStudentsByClass, updateStudent, deleteStudent  } from '../../database/LinkWithDatabaseSql.js';
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,6 +25,7 @@ router.get('/:classId', async (req, res) => {
     }
 });
 
+// Ajouter un élève
 // Ajouter un élève
 router.post('/', async (req, res) => {
     const { name, classId } = req.body;
@@ -86,6 +87,33 @@ router.post('/', async (req, res) => {
 
     } catch (err) {
         console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- 3. MODIFIER UN ÉLÈVE ---
+router.put('/:id', async (req, res) => {
+    const { name, classId } = req.body;
+    const studentId = req.params.id;
+
+    if (!name || !classId) return res.status(400).json({ error: "Données incomplètes" });
+
+    try {
+        await updateStudent(studentId, name, classId);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Erreur PUT student:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- 4. SUPPRIMER UN ÉLÈVE ---
+router.delete('/:id', async (req, res) => {
+    try {
+        await deleteStudent(req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Erreur DELETE student:", err);
         res.status(500).json({ error: err.message });
     }
 });

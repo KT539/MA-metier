@@ -4,57 +4,24 @@
     <title>Espace Élève</title>
     <link rel="stylesheet" href="/CSS/style.css">
     <style>
-        /* Ajout de style pour que la grille soit visible et jolie */
         .student-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 20px;
+            display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;
         }
         .student-slot {
-            width: 150px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column; /* Les éléments s'empilent (Image au-dessus du texte) */
-            align-items: center;
-            border: 2px solid #ddd;
-            border-radius: 15px;
-            background-color: white;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s;
+            width: 220px; padding: 15px;
+            display: flex; flex-direction: column; align-items: center;
+            border: 2px solid #ddd; border-radius: 15px; background-color: white;
+            text-align: center; cursor: pointer; transition: transform 0.2s, border-color 0.2s;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .student-slot:hover {
-            transform: scale(1.05);
-            border-color: #4CAF50;
-            background-color: #f9fff9;
-        }
+        .student-slot:hover { transform: scale(1.05); border-color: #4CAF50; background-color: #f9fff9; }
         .student-slot img {
-            max-width: 200px;
-            max-height: 200px;
-            justify-content: center;
-            object-fit: contain;
-            margin-bottom: 10px;
+            width: 200px; height: 200px; object-fit: contain; margin-bottom: 10px;
         }
-        .student-slot p {
-            font-weight: bold;
-            font-size: 1.2em;
-            margin: 0;
-            color: #333;
-        }
-
-        /* Ajout d'un bouton pour changer de classe (admin) */
+        .student-slot p { font-weight: bold; font-size: 1.2em; margin: 0; color: #333; }
         .admin-btn {
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            margin-bottom: 20px;
+            background: #ff6b6b; color: white; border: none; padding: 8px 15px;
+            border-radius: 5px; cursor: pointer; font-size: 0.9em; margin-bottom: 20px;
         }
         .hidden { display: none; }
     </style>
@@ -64,22 +31,18 @@
 <div id="setup-screen" style="max-width: 600px; margin: 50px auto; text-align: center;">
     <h2>Configuration (Enseignant)</h2>
     <p>Sélectionnez la classe pour cette tablette/ordinateur :</p>
-    <select id="student-class-select" style="padding: 10px; font-size: 16px; margin-bottom: 20px; min-width: 200px;">
-    </select>
+    <select id="student-class-select" style="padding: 10px; font-size: 16px; margin-bottom: 20px; min-width: 200px;"></select>
     <br>
     <button class="cat-btn cat-green" onclick="launchStudentMode()">Lancer le mode classe</button>
 </div>
 
 <div id="student-app" style="display:none; text-align: center;">
     <button class="admin-btn" onclick="resetClass()">⚙️ Changer de classe</button>
-
     <h1 id="welcome-msg">Qui es-tu ?</h1>
-
     <div class="student-grid" id="student-grid"></div>
 
     <div id="exercise-menu" class="hidden" style="margin-top: 50px;">
         <h2>Bonjour <span id="student-name-display" style="color:#e67e22;"></span> ! Choisis ton activité :</h2>
-
         <nav class="categories-nav" style="display: flex; gap: 20px; justify-content: center; margin-top: 30px;">
             <a href="#" onclick="startExercise('classification')" class="cat-btn cat-orange">Classification</a>
             <a href="#" onclick="startExercise('seriation')" class="cat-btn cat-green">Sériation</a>
@@ -96,71 +59,52 @@
     async function init() {
         const teacherId = localStorage.getItem('teacherId');
 
-        // On vérifie la sauvegarde
-        // localStorage = Mémoire Tablette (Classe)
-        // sessionStorage = Mémoire Onglet (Élève connecté)
+        // SYNCHRO : On lit ce que la page Prof a écrit dans la mémoire
         const savedClassId = localStorage.getItem('currentClassId');
+
         const savedStudentId = sessionStorage.getItem('currentStudentId');
         const savedStudentName = sessionStorage.getItem('currentStudentName');
 
-        // Si une classe et un élève sont déjà sauvegardés (Retour d'exercice)
+        // Cas A : Retour d'exercice
         if (savedClassId && savedStudentId && savedStudentName) {
             currentClassId = savedClassId;
-            // On masque le setup, on active l'app
             document.getElementById('setup-screen').style.display = 'none';
             document.getElementById('student-app').style.display = 'block';
-            // On lance directement le menu exercice pour cet élève
             showExerciseMenu(savedStudentName);
             return;
         }
 
-        // Si une classe était déjà sauvegardée, on lance le mode élève directement (Grille)
+        // Cas B : Classe connue (via Prof ou cache)
         if (savedClassId) {
             currentClassId = savedClassId;
             showStudentApp();
             return;
         }
 
-        if(!teacherId) {
-            alert("Erreur : Aucun enseignant connecté.");
-            return;
-        }
+        // Cas C : Setup manuel
+        if(!teacherId) return;
 
         try {
             const res = await fetch(`/api/classes/${teacherId}`);
             const classes = await res.json();
             const select = document.getElementById('student-class-select');
             select.innerHTML = '<option value="">-- Choisir une classe --</option>';
-
             classes.forEach(c => {
                 const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.text = c.name;
-                // Si c'est la classe sauvegardée, on la sélectionne (optionnel ici car géré au dessus)
-                if(c.id == savedClassId) opt.selected = true;
+                opt.value = c.id; opt.text = c.name;
                 select.add(opt);
             });
-
-        } catch (e) {
-            console.error("Erreur init:", e);
-        }
+        } catch (e) { console.error("Erreur init:", e); }
     }
 
     async function launchStudentMode() {
         const select = document.getElementById('student-class-select');
         currentClassId = select.value;
-
-        if (!currentClassId) {
-            alert("Veuillez sélectionner une classe.");
-            return;
-        }
-
-        // On sauvegarde le choix pour le prochain retour sur la page
+        if (!currentClassId) { alert("Veuillez sélectionner une classe."); return; }
         localStorage.setItem('currentClassId', currentClassId);
         showStudentApp();
     }
 
-    // Fonction pour changer de classe (supprime la sauvegarde)
     function resetClass() {
         if(confirm("Changer de classe ?")) {
             localStorage.removeItem('currentClassId');
@@ -169,17 +113,13 @@
         }
     }
 
-    // Fonction isolée pour afficher l'interface élève
     function showStudentApp() {
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('student-app').style.display = 'block';
-
-        // Reset de l'affichage pour montrer la grille
         document.getElementById('student-grid').style.display = 'flex';
         document.getElementById('welcome-msg').style.display = 'block';
         document.getElementById('exercise-menu').style.display = 'none';
         document.querySelector('.admin-btn').style.display = 'inline-block';
-
         loadStudentsForGrid();
     }
 
@@ -199,53 +139,41 @@
                 const div = document.createElement('div');
                 div.className = 'student-slot';
 
+                // Gestion image (espaces -> underscores)
                 let nomFichier = s.animal_image ? s.animal_image.split(' ').join('_') : 'default';
                 let imgSrc = `/images/animaux/${nomFichier}.png`;
 
                 div.innerHTML = `
-                    <img src="${imgSrc}"
-                         alt="${s.name}"
-                         onerror="this.src='/images/animaux/chat_jaune.png'; this.style.opacity='0.5';">
+                    <img src="${imgSrc}" alt="${s.name}" onerror="this.src='/images/animaux/default.png'; this.style.opacity='0.5';">
                     <p>${s.name}</p>
                 `;
                 div.onclick = () => selectStudent(s);
                 grid.appendChild(div);
             });
-        } catch (e) {
-            console.error("Erreur chargement élèves:", e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     function selectStudent(student) {
-        // On sauvegarde l'élève en session pour le retour d'exercice
         sessionStorage.setItem('currentStudentId', student.id);
         sessionStorage.setItem('currentStudentName', student.name);
-
         showExerciseMenu(student.name);
     }
 
     function showExerciseMenu(studentName) {
         document.getElementById('student-grid').style.display = 'none';
         document.getElementById('welcome-msg').style.display = 'none';
-        document.querySelector('.admin-btn').style.display = 'none'; // On cache le bouton changer classe
-
+        document.querySelector('.admin-btn').style.display = 'none';
         const menu = document.getElementById('exercise-menu');
         menu.style.display = 'block';
-        menu.classList.remove('hidden'); // Au cas où la classe hidden CSS cache tout
-
+        menu.classList.remove('hidden');
         document.getElementById('student-name-display').textContent = studentName;
     }
 
-    function startExercise(type) {
-        // Rediriger vers la page d'exercice
-        window.location.href = `/${type}`;
-    }
+    function startExercise(type) { window.location.href = `/${type}`; }
 
     function logoutStudent() {
         sessionStorage.removeItem('currentStudentId');
         sessionStorage.removeItem('currentStudentName');
-
-        // Retour à la grille de la classe actuelle
         showStudentApp();
     }
 
