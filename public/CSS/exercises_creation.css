@@ -78,65 +78,95 @@ h1 {
 }
 
 
-/* responsive - Media Queries */
-
-/* between 768px and 1024px */
+/* Responsive */
 @media (max-width: 1024px) {
-    .container {
-        padding: 30px;
+    #div-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+        margin-bottom: 40px;
     }
 
     h1 {
-        font-size: 2em;
+        font-size: 3rem;
+        margin: 0;
+        white-space: nowrap;
     }
 
-    .category-label {
-        font-size: 1.1em;
+    .arrow {
+        width: 65px;
+        height: 65px;
+        flex-shrink: 0;
     }
 
-    .cat-btn {
-        padding: 15px 25px;
-        font-size: 1.1em;
-        min-width: 160px;
-        max-width: none;
-        flex: 1 1 45%;
+    .container {
+        max-width: 90%;
+        padding: 50px 30px;
     }
 
     .category-buttons {
         gap: 25px;
     }
+
+    .cat-btn {
+        flex: 1 1 45%;
+        font-size: 1.4rem;
+        padding: 20px;
+    }
 }
 
-/* < than 768px */
-@media (max-width: 767px) {
-    body {
-        padding: 15px;
-    }
-
-    .container {
-        padding: 25px;
+@media (max-width: 768px) {
+    #div-header {
+        gap: 15px;
+        margin-top: 10px;
     }
 
     h1 {
-        font-size: 1.8em;
-        margin-bottom: 20px;
+        font-size: 1.8rem;
     }
 
-    .category-label {
-        font-size: 1em;
-        margin-bottom: 20px;
+    h2 {
+        font-size: 1.6rem;
+        text-align: center;
+    }
+
+    .arrow {
+        width: 45px;
+        height: 45px;
+    }
+
+    .exercises-grid {
+        max-width: 100%;
+        padding: 10px;
+        justify-content: center;
+    }
+
+    .container {
+        padding: 30px 15px;
+        width: 95%;
     }
 
     .category-buttons {
         flex-direction: column;
-        gap: 18px;
+        gap: 15px;
+        width: 100%;
     }
 
     .cat-btn {
         width: 100%;
-        max-width: 300px;
-        margin: 0 auto;
-        padding: 15px 20px;
-        font-size: 1em;
+        font-size: 1.2rem;
+        padding: 15px;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    .container .arrow {
+        width: 35px;
+        height: 35px;
+        top: 15px;
+        left: 15px;
     }
 }
