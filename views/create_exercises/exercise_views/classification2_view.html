@@ -5,7 +5,7 @@
     <title>Quel est le point commun ?</title>
     <link rel="stylesheet" href="/CSS/style.css">
     <style>
-        body { font-family: 'Comic Sans MS', sans-serif; text-align: center; background-color: #f0f8ff; }
+        body { font-family: 'Comic Sans MS', sans-serif; text-align: center; background-color: #fdf6c3; }
         .game-container { max-width: 800px; margin: 0 auto; padding: 20px; }
         .images-area { display: flex; justify-content: center; gap: 50px; margin: 30px 0; }
         .game-img {
@@ -35,7 +35,25 @@
         .feedback { font-size: 2em; margin-top: 20px; font-weight: bold; min-height: 50px; }
         .correct { color: green; }
         .wrong { color: red; }
-        .back-btn { position: absolute; top: 20px; left: 20px; padding: 10px; background: #ddd; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; color: black; font-weight: bold;}
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 25px;
+            background-color: #ffdc7d;
+            border: 3px solid #e67e22;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            color: black;
+            font-weight: bold;
+            font-size: 1.2em;
+            transition: transform 0.1s;
+        }
+        .back-btn:hover {
+            transform: scale(1.1);
+            background-color: #ffeeb0;
+        }
     </style>
 </head>
 <body>
