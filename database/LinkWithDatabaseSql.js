@@ -1,19 +1,17 @@
 import mysql from 'mysql2';
-import dotenv from 'dotenv';
-// Charge .env
-dotenv.config();
+
 // --- CONNEXION À LA BASE DE DONNÉES MYSQL ---
 
 const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+    host: 'localhost',      // 127.0.0.1
+    user: 'root',           // Ton utilisateur HeidiSQL
+    password: '',       // Ton mot de passe HeidiSQL
+    database: 'ecole_echallens' // Le nom de ta base
 });
 
 db.connect((err) => {
     if (err) console.error("Erreur connexion MySQL:", err.message);
-    else console.log(`Connecté à la base de données MySQL (${process.env.DB_NAME}).`);
+    else console.log('Connecté à la base de données MySQL.');
 });
 
 // --- FONCTIONS AUTHENTIFICATION ---
