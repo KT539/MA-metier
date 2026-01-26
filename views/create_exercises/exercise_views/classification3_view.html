@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>La bonne image</title>
+    <link rel="stylesheet" href="/CSS/style.css">
+    <style>
+        body { font-family: 'Comic Sans MS', sans-serif; text-align: center; background-color: #fdf6c3; }
+        .game-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        
+        /* The reference image (Base) */
+        .base-area { margin: 20px 0; padding: 20px; border-bottom: 3px dashed #e67e22; }
+        .base-img { 
+    width: 180px; 
+    height: 180px; 
+    background: white; 
+    border: 5px solid #e67e22; 
+    border-radius: 15px; 
+    padding: 10px;
+    /* FIX: This keeps the image proportional */
+    object-fit: contain; 
+}
+
+        /* The clickable choices */
+        .choices-area { display: flex; justify-content: center; gap: 30px; margin: 30px 0; }
+       .choice-img { width: 150px; height: 150px; object-fit: contain; /* Already here, but ensure it's applied */border: 4px solid #ddd; border-radius: 15px;background: white; padding: 10px; cursor: pointer;transition: transform 0.2s, border-color 0.2s;
+}
+        .choice-img:hover { transform: scale(1.1); border-color: #ffdc7d; }
+
+        .feedback { font-size: 2.5em; margin-top: 20px; font-weight: bold; min-height: 60px; }
+        .correct { color: green; }
+        .wrong { color: red; }
+        .back-btn { position: absolute; top: 20px; left: 20px; padding: 10px 25px; background-color: #ffdc7d; border: 3px solid #e67e22; border-radius: 50px; text-decoration: none; color: black; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<a href="/classification" class="back-btn">⬅ Retour</a>
+
+<div class="game-container">
+
+    <div class="base-area">
+        <p style="font-size: 40px;">Trouve l’image qui a exactement un point commun avec l’image présentée. Clique sur la bonne image.</p>
+        <img id="img-base" class="base-img" src="" alt="Base">
+    </div>
+
+    <div class="choices-area" id="choices">
+        <img id="choice1" class="choice-img" src="" onclick="checkChoice(this)">
+        <img id="choice2" class="choice-img" src="" onclick="checkChoice(this)">
+        <img id="choice3" class="choice-img" src="" onclick="checkChoice(this)">
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+</div>
+
+<script>
+    const levelId = window.location.pathname.split('/').pop();
+    let correctImgName = "";
+
+    function cleanFileName(name) {
+        if (!name) return "";
+        return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(' ').join('_');
+    }
+
+    async function initGame() {
+        try {
+            const res = await fetch(`/api/level/${levelId}`);
+            const data = await res.json();
+
+            // Set the base image
+            document.getElementById('img-base').src = `/images/shapes/${cleanFileName(data.image1_name)}.png`;
+
+            // Set choice images
+            const c1 = document.getElementById('choice1');
+            const c2 = document.getElementById('choice2');
+            const c3 = document.getElementById('choice3');
+
+            // The correct one is image2_name
+            correctImgName = cleanFileName(data.image2_name);
+
+            // Assign sources
+            c1.src = `/images/shapes/${cleanFileName(data.image2_name)}.png`;
+            c2.src = `/images/shapes/${cleanFileName(data.image3_name)}.png`;
+            c3.src = `/images/shapes/${cleanFileName(data.image4_name)}.png`;
+
+            // Shuffle choices so the answer isn't always on the left
+            const container = document.getElementById('choices');
+            for (let i = container.children.length; i >= 0; i--) {
+                container.appendChild(container.children[Math.random() * i | 0]);
+            }
+
+        } catch (e) { console.error(e); }
+    }
+
+    async function checkChoice(element) {
+        const feedback = document.getElementById('feedback');
+        const studentId = sessionStorage.getItem('currentStudentId');
+        
+        // Compare clicked image filename with the correct one
+        const clickedName = element.src.split('/').pop().replace('.png', '');
+
+        if (clickedName === correctImgName) {
+            feedback.textContent = "BRAVO ! 🎉";
+            feedback.className = "feedback correct";
+            if(studentId) await saveResult(studentId, true);
+            setTimeout(() => { window.location.href = '/classification'; }, 2000);
+        } else {
+            feedback.textContent = "Essaie encore ! ❌";
+            feedback.className = "feedback wrong";
+            element.style.borderColor = "red";
+            if(studentId) await saveResult(studentId, false);
+        }
+    }
+
+    async function saveResult(studentId, isSuccess) {
+        try {
+            await fetch('/api/progress', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ studentId, levelId, isSuccess })
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    initGame();
+</script>
+</body>
+</html>

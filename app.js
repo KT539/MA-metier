@@ -64,6 +64,10 @@ app.get('/create_exercises/forms/classification_form2', (req, res) => {
     res.sendFile(__dirname + '/views/create_exercises/forms/classification_form2.html');
 });
 
+app.get('/create_exercises/forms/classification_form3', (req, res) => {
+    res.sendFile(__dirname + '/views/create_exercises/forms/classification_form3.html');
+});
+
 app.get('/api/shapes-images', async (req, res) => {
     try {
         const images = await getShapesImages();
@@ -150,7 +154,7 @@ app.post('/api/create/classification2', async (req, res) => {
         }
 
         // On crée le niveau avec la bonne réponse (0 ou 1)
-        const newLevelId = await createLevel(exerciseId, classificationCat.id, image1Id, image2Id, correctAnswer);
+        const newLevelId = await createLevel(exerciseId, classificationCat.id, image1Id, image2Id, null, null, correctAnswer);
 
         res.json({ success: true, id: newLevelId });
     } catch (e) {
@@ -158,6 +162,40 @@ app.post('/api/create/classification2', async (req, res) => {
         res.status(500).json({ error: "Erreur création niveau" });
     }
 });
+
+app.post('/api/create/classification3', async (req, res) => {
+    try {
+        // Extract names exactly as they are sent from your HTML/JS
+        const { 
+            exercise_id, 
+            category_id, 
+            image_id_1, 
+            image_id_2, 
+            image_id_3, 
+            image_id_4, 
+            correct_answer 
+        } = req.body;
+
+        // Call your database function
+        const newLevelId = await createLevel(
+            exercise_id, 
+            category_id, 
+            image_id_1, 
+            image_id_2, 
+            image_id_3, 
+            image_id_4, 
+            correct_answer
+        );
+
+        console.log(`Classification 3 created: ID ${newLevelId}`);
+        res.json({ success: true, id: newLevelId });
+    } catch (e) {
+        console.error("Save Error:", e);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
+});
+
+
 
 // 3. Récupérer les infos d'un niveau spécifique pour le jeu
 app.get('/api/level/:id', async (req, res) => {
@@ -182,6 +220,11 @@ app.post('/api/progress', async (req, res) => {
 // Page de jeu pour "Quel est le point commun ?"
 app.get('/play/classification2/:id', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/create_exercises/exercise_views/classification2_view.html'));
+});
+
+// Page de jeu pour "Bonne image"
+app.get('/play/classification3/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/create_exercises/exercise_views/classification3_view.html'));
 });
 
 // --- API ROUTES ---
