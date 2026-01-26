@@ -4,7 +4,7 @@ import path from 'path';
 const router = express.Router();
 import { fileURLToPath } from 'url';
 // import db, { createStudent, getClassProgress, getStudentsByClass } from '../../database/Sqlite_Deprecated/Database.js';
-import db, { createStudent, getClassProgress, getStudentsByClass, updateStudent, deleteStudent  } from '../../database/LinkWithDatabaseSql.js';
+import db, { createStudent, getClassProgress, getStudentsByClass, updateStudent, deleteStudent, recordFailure  } from '../../database/LinkWithDatabaseSql.js';
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,7 +25,6 @@ router.get('/:classId', async (req, res) => {
     }
 });
 
-// Ajouter un élève
 // Ajouter un élève
 router.post('/', async (req, res) => {
     const { name, classId } = req.body;
@@ -152,6 +151,23 @@ router.get('/:studentId/progress/:exerciseName', async (req, res) => {
             res.json(completedLevelIds);
         });
     } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Route pour enregistrer une réponse fausse
+router.post('/progress/fail', async (req, res) => {
+    const { studentId, levelId } = req.body;
+
+    if (!studentId || !levelId) {
+        return res.status(400).json({ error: "IDs manquants" });
+    }
+
+    try {
+        await recordFailure(studentId, levelId);
+        res.json({ success: true, message: "Échec enregistré" });
+    } catch (err) {
+        console.error("Erreur enregistrement échec:", err);
         res.status(500).json({ error: err.message });
     }
 });

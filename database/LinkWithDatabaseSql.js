@@ -317,4 +317,29 @@ export const getExerciseIdByName = (name) => {
     });
 };
 
+export async function recordFailure(studentId, levelId) {
+    return new Promise((resolve, reject) => {
+        // 1. On vérifie si une entrée existe déjà
+        const checkSql = "SELECT id FROM progress WHERE student_id = ? AND level_id = ?";
+        db.query(checkSql, [studentId, levelId], (err, rows) => {
+            if (err) return reject(err);
+            if (rows.length > 0) {
+                // 2A. Ça existe -> On incrémente failure_count
+                const updateSql = "UPDATE progress SET failure_count = failure_count + 1 WHERE id = ?";
+                db.query(updateSql, [rows[0].id], (err2) => {
+                    if (err2) reject(err2);
+                    else resolve({ status: "updated", id: rows[0].id });
+                });
+            } else {
+                // 2B. Ça n'existe pas -> On crée la ligne avec failure_count = 1
+                const insertSql = "INSERT INTO progress (student_id, level_id, failure_count, success_count, is_completed) VALUES (?, ?, 1, 0, 0)";
+                db.query(insertSql, [studentId, levelId], (err3, result) => {
+                    if (err3) reject(err3);
+                    else resolve({ status: "created", id: result.insertId });
+                });
+            }
+        });
+    });
+}
+
 export default db;

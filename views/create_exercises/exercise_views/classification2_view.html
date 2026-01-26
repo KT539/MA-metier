@@ -82,13 +82,12 @@
     const levelId = window.location.pathname.split('/').pop();
     let correctAnswer = null;
 
-    // Fonction magique pour nettoyer le nom (carré -> carre)
     function cleanFileName(name) {
         if (!name) return "";
         return name
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Enlève les accents
-            .toLowerCase() // Force en minuscule
-            .split(' ').join('_'); // Remplace les espaces par _
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .split(' ').join('_');
     }
 
     async function initGame() {
@@ -97,60 +96,66 @@
             if(!res.ok) throw new Error("Erreur serveur");
             const levelData = await res.json();
 
-            // --- Construction sécurisée du chemin ---
             if (levelData.image1_name) {
-                // Transforme "Carré bleu" -> "carre_bleu"
                 let name1 = cleanFileName(levelData.image1_name);
-                let path1 = `/images/shapes/${name1}.png`;
-
-                const img1 = document.getElementById('img1');
-                img1.src = path1;
-                img1.style.display = 'block'; // On affiche l'image
+                document.getElementById('img1').src = `/images/shapes/${name1}.png`;
+                document.getElementById('img1').style.display = 'block';
             }
 
             if (levelData.image2_name) {
                 let name2 = cleanFileName(levelData.image2_name);
-                let path2 = `/images/shapes/${name2}.png`;
-
-                const img2 = document.getElementById('img2');
-                img2.src = path2;
-                img2.style.display = 'block';
+                document.getElementById('img2').src = `/images/shapes/${name2}.png`;
+                document.getElementById('img2').style.display = 'block';
             }
 
             correctAnswer = levelData.correct_answer;
 
-        } catch (e) {
-            console.error("Erreur Init:", e);
-        }
+        } catch (e) { console.error("Erreur Init:", e); }
     }
 
+    // --- Gestion de la réponse ---
     async function checkAnswer(choice) {
         const feedback = document.getElementById('feedback');
         const studentId = sessionStorage.getItem('currentStudentId');
 
         if (choice === correctAnswer) {
+            // CAS RÉUSSITE
             feedback.textContent = "BRAVO !";
             feedback.className = "feedback correct";
 
-            if(studentId) await saveResult(studentId, true);
+            if(studentId) await saveSuccess(studentId); // Appel pour valider le niveau
 
             setTimeout(() => { window.location.href = '/classification'; }, 1500);
         } else {
+            // CAS ÉCHEC
             feedback.textContent = "Essaie encore !";
             feedback.className = "feedback wrong";
 
-            if(studentId) await saveResult(studentId, false);
+            // On appelle la route SPÉCIFIQUE pour compter l'erreur
+            if(studentId) await sendWrongAnswer(studentId, levelId);
         }
     }
 
-    async function saveResult(studentId, isSuccess) {
+    // Fonction pour enregistrer l'échec
+    async function sendWrongAnswer(studentId, levelId) {
+        try {
+            await fetch('/api/students/progress/fail', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ studentId, levelId })
+            });
+        } catch(e) { console.error("Erreur enregistrement échec", e); }
+    }
+
+    // Fonction pour enregistrer le succès
+    async function saveSuccess(studentId) {
         try {
             await fetch('/api/progress', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ studentId, levelId, isSuccess })
+                body: JSON.stringify({ studentId, levelId, isSuccess: true })
             });
-        } catch(e) { console.error("Erreur sauvegarde", e); }
+        } catch(e) { console.error("Erreur sauvegarde succès", e); }
     }
 
     initGame();
