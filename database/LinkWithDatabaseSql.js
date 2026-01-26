@@ -284,7 +284,7 @@ export const saveProgress = (studentId, levelId, isSuccess) => {
             if (err) return reject(err);
 
             if (results.length > 0) {
-                // Mise à jour : on incrémente le succès si c'est réussi
+                // On incrémente le succès si c'est réussi
                 if (isSuccess) {
                     const updateSql = `UPDATE progress SET success_count = success_count + 1, is_completed = 1 WHERE id = ?`;
                     db.query(updateSql, [results[0].id], (e, r) => {
