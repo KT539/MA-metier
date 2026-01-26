@@ -14,7 +14,6 @@ function loadexercises(sectionid, data, btncolour, exerciseType, completedIds = 
         return;
     }
 
-    // Sécurité : on s'assure que completedIds est bien un tableau
     const safeCompletedIds = Array.isArray(completedIds) ? completedIds : [];
 
     levels.forEach((level, index) => {
@@ -24,7 +23,7 @@ function loadexercises(sectionid, data, btncolour, exerciseType, completedIds = 
 
         // --- LOGIQUE DE VERROUILLAGE & COULEUR ---
 
-        // 1. Terminé ? (L'ID est dans la liste des succès)
+        // 1. Terminé ?
         const isCompleted = level.id && safeCompletedIds.includes(level.id);
 
         // 2. Débloqué ?
@@ -51,7 +50,7 @@ function loadexercises(sectionid, data, btncolour, exerciseType, completedIds = 
             circle.style.color = 'white';
             borderColor = '#2E7D32';
         } else if (isLocked) {
-            bgColor = '#ddd';    // Gris (verrouillé)
+            bgColor = '#ddd';
             borderColor = '#999';
             cursorStyle = 'not-allowed';
             opacity = '0.6';
@@ -97,7 +96,6 @@ function loadexercises(sectionid, data, btncolour, exerciseType, completedIds = 
                 } else {
                     console.log("Exercice fictif ou type inconnu (pas de redirection)");
                     // Optionnel : Alert pour dire que c'est un test
-                    // alert("Niveau " + level.id + " (Pas encore relié)");
                 }
             });
         }
@@ -116,10 +114,6 @@ async function fetchAndLoad(sectionId, exerciseName, exerciseTypeRoute, fallback
         if (!responseLevels.ok) throw new Error('Erreur réseau niveaux');
 
         const levels = await responseLevels.json();
-
-        // --- CORRECTION ---
-        // Si la BDD renvoie une liste vide (car pas encore remplie), on lève une erreur
-        // pour forcer l'utilisation du "fallback" (les 30 ronds par défaut)
         if (!levels || levels.length === 0) {
             throw new Error("Aucun niveau en BDD -> Utilisation du fallback");
         }
@@ -141,9 +135,6 @@ async function fetchAndLoad(sectionId, exerciseName, exerciseTypeRoute, fallback
         loadexercises(sectionId, levels, color, exerciseTypeRoute, completedIds);
 
     } catch (error) {
-        // En cas d'erreur ou de BDD vide, on affiche le nombre fixe (ex: 30)
-        // Note : On passe aussi 'exerciseTypeRoute' ici pour que les liens fonctionnent même en mode secours
-        // (Si vos routes /play/... existent déjà)
         loadexercises(sectionId, fallbackCount, color, exerciseTypeRoute, []);
     }
 }
