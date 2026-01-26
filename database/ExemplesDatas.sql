@@ -115,7 +115,7 @@ INSERT INTO category (name) VALUES
     ('Sériation'); -- ID 4
 -- B. Exercices
 INSERT INTO exercise (name, category_id) VALUES
-    ('Pareils ou différents', 1),
+    ('Pareils ou différents ?', 1),
     ('Quel est le point commun ?', 1),
     ('La bonne image', 1),
     ('Sur la pile', 1);
