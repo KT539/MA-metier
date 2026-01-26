@@ -149,7 +149,9 @@ switch (path) {
 
         // Exercices statiques
         loadexercises('exercises-grid-images', 30, '#ffdc7d', null, []);
-        loadexercises('exercises-grid-pile', 30, '#ffdc7d', null, []);
+
+        // Exercice 4 : Sur la pile (Dynamique)
+        fetchAndLoad('exercises-grid-pile', 'Sur la pile', 'classification4', 30, '#ffdc7d');
         break;
 
     case "/conservation":

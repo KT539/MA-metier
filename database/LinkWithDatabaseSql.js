@@ -366,4 +366,75 @@ export const getClassStatistics = (classId) => {
     });
 };
 
+// --- FONCTIONS SPÉCIFIQUES EXERCICE 4 (SUR LA PILE) ---
+
+// 1. Créer un niveau "Sur la pile" en utilisant level + level_has_images
+export const createLevelPile = (exerciseId, categoryId, startImageId, handImageIds) => {
+    return new Promise((resolve, reject) => {
+        // A. On insère le niveau avec l'image de départ dans image_id_1
+        const sqlLevel = `INSERT INTO level (exercise_id, category_id, image_id_1) VALUES (?, ?, ?)`;
+
+        db.query(sqlLevel, [exerciseId, categoryId, startImageId], (err, result) => {
+            if (err) return reject(err);
+
+            const newLevelId = result.insertId;
+
+            // B. On prépare les données pour la table de liaison level_has_images
+            const values = handImageIds.map(imgId => [newLevelId, imgId]);
+
+            const sqlImages = `INSERT INTO level_has_images (level_id, image_id) VALUES ?`;
+
+            db.query(sqlImages, [values], (errImages) => {
+                if (errImages) return reject(errImages);
+                resolve(newLevelId);
+            });
+        });
+    });
+};
+
+// 2. Récupérer un niveau "Sur la pile" complet
+export const getLevelPileById = (levelId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT 
+                l.id as level_id,
+                start_img.id as start_id, start_img.name as start_name, start_img.path as start_path,
+                hand_img.id as hand_id, hand_img.name as hand_name, hand_img.path as hand_path
+            FROM level l
+            JOIN image start_img ON l.image_id_1 = start_img.id
+            LEFT JOIN level_has_images lhi ON l.id = lhi.level_id
+            LEFT JOIN image hand_img ON lhi.image_id = hand_img.id
+            WHERE l.id = ?
+        `;
+
+        db.query(sql, [levelId], (err, rows) => {
+            if (err) return reject(err);
+            if (rows.length === 0) return reject(new Error("Niveau introuvable"));
+
+            // On restructure les données (car SQL renvoie une ligne par image de main)
+            const levelData = {
+                id: rows[0].level_id,
+                startImage: {
+                    id: rows[0].start_id,
+                    name: rows[0].start_name,
+                    url: rows[0].start_path
+                },
+                handImages: []
+            };
+
+            rows.forEach(row => {
+                if (row.hand_id) {
+                    levelData.handImages.push({
+                        id: row.hand_id,
+                        name: row.hand_name,
+                        url: row.hand_path
+                    });
+                }
+            });
+
+            resolve(levelData);
+        });
+    });
+};
+
 export default db;
