@@ -109,6 +109,19 @@
                 opt.dataset.active = c.is_active;
                 select.add(opt);
             });
+
+            const savedClassId = localStorage.getItem('currentClassId');
+
+            if (savedClassId) {
+                const classExists = classes.some(c => c.id == savedClassId);
+
+                if (classExists) {
+                    select.value = savedClassId;
+                    loadClassData();
+                }
+            }
+            // ---------------------------------------------
+
         } catch (err) { console.error(err); }
     }
 
