@@ -13,6 +13,16 @@ router.get('/:teacherId', async (req, res) => {
     }
 });
 
+// Récupérer les statistiques d'une classe
+router.get('/:classId/stats', async (req, res) => {
+    try {
+        const stats = await db.getClassStatistics(req.params.classId);
+        res.json(stats);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Créer une classe
 router.post('/', async (req, res) => {
     const { name, teacherId } = req.body;

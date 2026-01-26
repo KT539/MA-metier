@@ -35,6 +35,7 @@
             gap: 20px;
             flex-wrap: wrap;
             margin-bottom: 30px;
+            align-items: flex-start;
         }
         .stat-card {
             background: white;
@@ -47,10 +48,24 @@
         }
         .stat-title { font-weight: bold; color: #555; margin-bottom: 10px; display: block; }
         .stat-value { font-size: 2em; font-weight: bold; color: #333; }
-        .stat-alert { color: #d9534f; } /* Rouge pour les alertes */
-        .stat-good { color: #5cb85c; }  /* Vert pour le succès */
+        .stat-alert { color: #d9534f; }
+        .stat-good { color: #5cb85c; }
         .progress-bar-bg { background-color: #eee; height: 10px; border-radius: 5px; margin-top: 5px; }
         .progress-bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s; }
+
+        /* Select pour le filtre */
+        .stats-filter-select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .question-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 0; border-bottom: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
@@ -90,6 +105,12 @@
     </div>
 
     <h3>Statistiques de la Classe</h3>
+    <div style="margin-bottom: 10px;">
+        <label for="stats-filter"><strong>Afficher les statistiques pour :</strong></label>
+        <select id="stats-filter" class="stats-filter-select" onchange="renderStatsView()">
+            <option value="ALL">Vue d'ensemble (Tous les exercices)</option>
+        </select>
+    </div>
     <div id="stats-section" class="stats-container">
         <p>Chargement des statistiques...</p>
     </div>
@@ -119,6 +140,7 @@
     let currentClassId = null;
     let currentClassActive = false;
     let allClasses = [];
+    let currentStatsData = []; // Stockage local des stats
 
     // --- 1. CHARGEMENT DES CLASSES ---
     async function loadClasses() {
@@ -148,8 +170,6 @@
                     loadClassData();
                 }
             }
-            // ---------------------------------------------
-
         } catch (err) { console.error(err); }
     }
 
@@ -176,7 +196,7 @@
             return;
         }
 
-        // SYNCHRO : On écrit dans la mémoire locale pour la vue élève
+        // On écrit dans la mémoire locale pour la vue élève
         localStorage.setItem('currentClassId', currentClassId);
 
         document.getElementById('dashboard-content').style.display = 'block';
@@ -262,7 +282,6 @@
             div.style.backgroundColor = "#f9f9f9";
             div.style.borderRadius = "8px";
 
-            // Formatage image
             const nomFichier = s.animal_image ? s.animal_image.split(' ').join('_') : 'default';
             const imagePath = `/images/animaux/${nomFichier}.png`;
             const safeName = s.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
@@ -318,53 +337,75 @@
         });
     }
 
-    // --- 5. STATISTIQUES ---
+    // --- 5. STATISTIQUES AVEC FILTRE ---
     async function loadClassStats() {
         if (!currentClassId) return;
         const container = document.getElementById('stats-section');
+        const selectFilter = document.getElementById('stats-filter');
 
         try {
             const res = await fetch(`/api/classes/${currentClassId}/stats`);
-            const stats = await res.json();
+            currentStatsData = await res.json(); // Données brutes (Exercice + Level)
 
-            if (stats.length === 0) {
+            if (currentStatsData.length === 0) {
                 container.innerHTML = '<p>Pas assez de données pour afficher les statistiques.</p>';
                 return;
             }
 
-            let totalSuccess = 0;
-            let totalFailure = 0;
-            let difficultExercises = [];
+            // 1. "Peupler" le menu déroulant
+            const exercises = [...new Set(currentStatsData.map(d => d.exercise_name))].sort();
+            selectFilter.innerHTML = '<option value="ALL">Vue d\'ensemble (Tous les exercices)</option>';
+            exercises.forEach(ex => {
+                const opt = document.createElement('option');
+                opt.value = ex;
+                opt.textContent = ex;
+                selectFilter.add(opt);
+            });
 
-            // Calculs
-            stats.forEach(s => {
-                const sCount = parseInt(s.successes);
-                const fCount = parseInt(s.failures);
-                totalSuccess += sCount;
-                totalFailure += fCount;
+            // 2. Afficher la vue par défaut
+            renderStatsView();
 
-                const total = sCount + fCount;
-                const rate = total > 0 ? (sCount / total) * 100 : 0;
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = '<p>Erreur lors du chargement des statistiques.</p>';
+        }
+    }
 
-                // On considère un exercice "difficile" si < 60% de réussite
-                if (rate < 60 && total > 0) {
-                    difficultExercises.push({ name: s.exercise_name, rate: rate.toFixed(1) });
-                }
+    function renderStatsView() {
+        const filterVal = document.getElementById('stats-filter').value;
+        const container = document.getElementById('stats-section');
+
+        // --- MODE VUE D'ENSEMBLE ---
+        if (filterVal === "ALL") {
+            let totalSuccess = 0, totalFailure = 0;
+            // On regroupe par Exercice pour trouver les plus difficiles
+            const exerciseMap = {};
+
+            currentStatsData.forEach(d => {
+                const s = parseInt(d.successes), f = parseInt(d.failures);
+                totalSuccess += s; totalFailure += f;
+
+                if (!exerciseMap[d.exercise_name]) exerciseMap[d.exercise_name] = {s:0, f:0};
+                exerciseMap[d.exercise_name].s += s;
+                exerciseMap[d.exercise_name].f += f;
             });
 
             const totalAttempts = totalSuccess + totalFailure;
             const globalRate = totalAttempts > 0 ? ((totalSuccess / totalAttempts) * 100).toFixed(1) : 0;
 
-            // Génération HTML
+            // Identifier exercices difficiles (seuil défini à <60%)
             let difficultHtml = '';
-            if (difficultExercises.length > 0) {
-                difficultHtml = `<ul style="padding-left: 20px; margin: 0;">`;
-                difficultExercises.forEach(d => {
-                    difficultHtml += `<li style="margin-bottom: 5px;"><strong>${d.name}</strong> : <span class="stat-alert">${d.rate}%</span> de réussite</li>`;
-                });
-                difficultHtml += `</ul>`;
+            const diffEx = [];
+            for (const [name, counts] of Object.entries(exerciseMap)) {
+                const tot = counts.s + counts.f;
+                const rate = tot > 0 ? (counts.s / tot) * 100 : 0;
+                if (rate < 60 && tot > 0) diffEx.push({name, rate: rate.toFixed(1)});
+            }
+
+            if (diffEx.length > 0) {
+                difficultHtml = '<ul>' + diffEx.map(d => `<li><strong>${d.name}</strong> : <span class="stat-alert">${d.rate}%</span></li>`).join('') + '</ul>';
             } else {
-                difficultHtml = `<p class="stat-good">Aucun exercice problématique détecté ! 🎉</p>`;
+                difficultHtml = '<p class="stat-good">Aucun exercice problématique ! 🎉</p>';
             }
 
             // Construction des cartes
@@ -372,32 +413,58 @@
                 <div class="stat-card">
                     <span class="stat-title">Taux de réussite global</span>
                     <div class="stat-value ${globalRate >= 50 ? 'stat-good' : 'stat-alert'}">${globalRate}%</div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" style="width: ${globalRate}%; background-color: ${globalRate >= 50 ? '#5cb85c' : '#d9534f'};"></div>
-                    </div>
-                    <p style="font-size: 0.9em; color: #777; margin-top: 5px;">Sur ${totalAttempts} tentatives totales</p>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${globalRate}%; background-color: ${globalRate >= 50 ? '#5cb85c' : '#d9534f'};"></div></div>
+                    <p style="font-size: 0.9em; color: #777; margin-top: 5px;">${totalAttempts} tentatives</p>
                 </div>
 
                 <div class="stat-card">
-                    <span class="stat-title">Exercices à surveiller (Réussite < 60%)</span>
+                    <span class="stat-title">Exercices à surveiller (Moyenne < 60%)</span>
                     ${difficultHtml}
                 </div>
+            `;
+        }
+        // --- MODE DÉTAIL PAR EXERCICE ---
+        else {
+            const exerciseData = currentStatsData.filter(d => d.exercise_name === filterVal);
 
-                <div class="stat-card">
-                    <span class="stat-title">Détails par exercice</span>
-                    <ul style="font-size: 0.9em; padding-left: 20px;">
-                        ${stats.map(s => {
-                const t = parseInt(s.successes) + parseInt(s.failures);
-                const r = t > 0 ? Math.round((s.successes / t) * 100) : 0;
-                return `<li>${s.exercise_name}: <strong>${r}%</strong> (${t} essais)</li>`;
-            }).join('')}
-                    </ul>
+            // On suppose que les données sont triées par level_id ascendant grâce au SQL
+            // On va générer une liste de questions (niveaux)
+            let detailsHtml = '<div style="max-height: 300px; overflow-y: auto;">';
+
+            // Compteur local pour afficher "Question 1, Question 2..."
+            let questionCounter = 1;
+
+            exerciseData.forEach(d => {
+                const s = parseInt(d.successes);
+                const f = parseInt(d.failures);
+                const tot = s + f;
+                const rate = tot > 0 ? Math.round((s/tot)*100) : 0;
+
+                // Couleur bar
+                const color = rate >= 60 ? '#5cb85c' : (rate >= 40 ? '#f0ad4e' : '#d9534f');
+
+                detailsHtml += `
+                    <div class="question-row">
+                        <div style="flex: 1;"><strong>Question ${questionCounter}</strong> <span style="font-size:0.8em; color:#888;">(Niv ${d.level_id})</span></div>
+                        <div style="flex: 2; margin: 0 10px;">
+                            <div class="progress-bar-bg" style="height: 15px; margin-top:0;">
+                                <div class="progress-bar-fill" style="width: ${rate}%; background-color: ${color};"></div>
+                            </div>
+                        </div>
+                        <div style="width: 50px; text-align: right; font-weight: bold;">${rate}%</div>
+                    </div>
+                `;
+                questionCounter++;
+            });
+            detailsHtml += '</div>';
+
+            container.innerHTML = `
+                <div class="stat-card" style="flex: 2;">
+                    <span class="stat-title">Détail par Question : ${filterVal}</span>
+                    <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Performance de la classe sur chaque niveau de cet exercice.</p>
+                    ${detailsHtml}
                 </div>
             `;
-
-        } catch (e) {
-            console.error(e);
-            container.innerHTML = '<p>Erreur lors du chargement des statistiques.</p>';
         }
     }
 

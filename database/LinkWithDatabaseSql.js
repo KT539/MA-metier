@@ -181,15 +181,15 @@ export const deleteStudent = (studentId) => {
 export const getClassProgress = (classId) => {
     return new Promise((resolve, reject) => {
         const sql = `
-            SELECT 
-                s.name, 
+            SELECT
+                s.name,
                 e.name as exercise_type,    -- Nom de l'exercice (ex: Classification)
                 l.id as exercise_level,     -- ID ou numéro du niveau
-                p.is_completed 
+                p.is_completed
             FROM student s
-                LEFT JOIN progress p ON s.id = p.student_id
-                LEFT JOIN level l ON p.level_id = l.id
-                LEFT JOIN exercise e ON l.exercise_id = e.id
+                     LEFT JOIN progress p ON s.id = p.student_id
+                     LEFT JOIN level l ON p.level_id = l.id
+                     LEFT JOIN exercise e ON l.exercise_id = e.id
             WHERE s.class_id = ?
         `;
         db.query(sql, [classId], (err, rows) => {
@@ -213,7 +213,7 @@ export const getShapesImages = () => {
 // create new level
 export const createLevel = (exerciseId, categoryId, imageId1, imageId2, correctAnswer) => {
     return new Promise((resolve, reject) => {
-        const sql = `INSERT INTO level (exercise_id, category_id, image_id_1, image_id_2, correct_answer) 
+        const sql = `INSERT INTO level (exercise_id, category_id, image_id_1, image_id_2, correct_answer)
                      VALUES (?, ?, ?, ?, ?)`;
         db.query(sql, [exerciseId, categoryId, imageId1, imageId2, correctAnswer], (err, result) => {
             if (err) reject(err);
@@ -227,9 +227,9 @@ export const getLevelsByExerciseName = (exerciseName) => {
     return new Promise((resolve, reject) => {
         // On joint les tables level et exercise pour filtrer par nom d'exercice
         const sql = `
-            SELECT l.id, l.exercise_id 
+            SELECT l.id, l.exercise_id
             FROM level l
-            JOIN exercise e ON l.exercise_id = e.id
+                     JOIN exercise e ON l.exercise_id = e.id
             WHERE e.name = ?
             ORDER BY l.id ASC
         `;
@@ -342,19 +342,22 @@ export async function recordFailure(studentId, levelId) {
     });
 };
 
+// Menu déroulant pour les statistiques
 export const getClassStatistics = (classId) => {
     return new Promise((resolve, reject) => {
         const sql = `
-            SELECT 
+            SELECT
                 e.name as exercise_name,
+                l.id as level_id,
                 SUM(p.success_count) as successes,
                 SUM(p.failure_count) as failures
             FROM progress p
-            JOIN student s ON p.student_id = s.id
-            JOIN level l ON p.level_id = l.id
-            JOIN exercise e ON l.exercise_id = e.id
+                     JOIN student s ON p.student_id = s.id
+                     JOIN level l ON p.level_id = l.id
+                     JOIN exercise e ON l.exercise_id = e.id
             WHERE s.class_id = ?
-            GROUP BY e.name
+            GROUP BY e.name, l.id
+            ORDER BY e.name, l.id ASC
         `;
         db.query(sql, [classId], (err, rows) => {
             if (err) reject(err);
