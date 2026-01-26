@@ -84,7 +84,45 @@ app.get('/api/exercises/:name/levels', async (req, res) => {
     }
 });
 
-// --- API ROUTES AJOUTÉES ---
+// Route pour afficher la page de jeu classification1
+app.get('/play/classification1/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/create_exercises/exercise_views/classification1_view.html'));
+});
+
+// Sauvegarder un niveau "Pareils ou différents ?" (Classification 1)
+app.post('/api/create/classification1', async (req, res) => {
+    try {
+        // correctAnswer : 1 pour "Pareils (=)", 0 pour "Différents (≠)"
+        const { image1Id, image2Id, correctAnswer } = req.body;
+
+        // Récupérer l'ID de l'exercice
+        const exerciseId = await getExerciseIdByName("Pareils ou différents ?");
+
+        // Récupérer l'ID de la catégorie "Classification"
+        const categories = await getCategories();
+        const classificationCat = categories.find(c => c.name === 'Classification');
+
+        if (!exerciseId || !classificationCat) {
+            return res.status(500).json({
+                error: "Configuration BDD manquante (Exercice 'Pareils ou différents ?' ou Catégorie 'Classification')"
+            });
+        }
+
+        // Création du niveau
+        const newLevelId = await createLevel(
+            exerciseId,
+            classificationCat.id,
+            image1Id,
+            image2Id,
+            correctAnswer
+        );
+
+        res.json({ success: true, id: newLevelId });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Erreur création niveau classification 1" });
+    }
+});
 
 // 1. Récupérer les catégories pour le formulaire
 app.get('/api/categories', async (req, res) => {
