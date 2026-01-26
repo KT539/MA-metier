@@ -5,7 +5,7 @@ import mysql from 'mysql2';
 const db = mysql.createConnection({
     host: 'localhost',      // 127.0.0.1
     user: 'root',           // Ton utilisateur HeidiSQL
-    password: 'root',       // Ton mot de passe HeidiSQL
+    password: '',       // Ton mot de passe HeidiSQL
     database: 'ecole_echallens' // Le nom de ta base
 });
 
@@ -209,11 +209,11 @@ export const getShapesImages = () => {
 };
 
 // create new level
-export const createLevel = (exerciseId, categoryId, imageId1, imageId2, correctAnswer) => {
+export const createLevel = (exerciseId, categoryId, imageId1, imageId2, imageId3, imageId4, correctAnswer) => {
     return new Promise((resolve, reject) => {
-        const sql = `INSERT INTO level (exercise_id, category_id, image_id_1, image_id_2, correct_answer) 
-                     VALUES (?, ?, ?, ?, ?)`;
-        db.query(sql, [exerciseId, categoryId, imageId1, imageId2, correctAnswer], (err, result) => {
+        const sql = `INSERT INTO level (exercise_id, category_id, image_id_1, image_id_2, image_id_3, image_id_4, correct_answer) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        db.query(sql, [exerciseId, categoryId, imageId1, imageId2, imageId3, imageId4, correctAnswer], (err, result) => {
             if (err) reject(err);
             else resolve(result.insertId);
         });
@@ -258,11 +258,15 @@ export const getLevelById = (levelId) => {
             SELECT
                 l.id,
                 l.correct_answer,
-                i1.name as image1_name, -- On a besoin du NOM (ex: "carre bleu")
-                i2.name as image2_name
+                i1.name as image1_name,
+                i2.name as image2_name,
+                i3.name as image3_name,
+                i4.name as image4_name
             FROM level l
-                     LEFT JOIN image i1 ON l.image_id_1 = i1.id
-                     LEFT JOIN image i2 ON l.image_id_2 = i2.id
+                LEFT JOIN image i1 ON l.image_id_1 = i1.id
+                LEFT JOIN image i2 ON l.image_id_2 = i2.id
+                LEFT JOIN image i3 ON l.image_id_3 = i3.id
+                LEFT JOIN image i4 ON l.image_id_4 = i4.id
             WHERE l.id = ?
         `;
         db.query(sql, [levelId], (err, result) => {

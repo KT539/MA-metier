@@ -102,8 +102,10 @@ switch (path) {
         // 2. "Quel est le point commun ?" (classification2)
         fetchAndLoad('exercises-grid-commun', 'Quel est le point commun ?', 'classification2', 30, '#ffdc7d');
 
+        fetchAndLoad('exercises-grid-images', 'La bonne image', 'classification3', 30, '#ffdc7d');
+
         // Static count for others (until they are added to DB)
-        loadexercises('exercises-grid-images', 30, '#ffdc7d')
+        //loadexercises('exercises-grid-images', 30, '#ffdc7d')
         loadexercises('exercises-grid-pile', 30, '#ffdc7d')
         break;
 
