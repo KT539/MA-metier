@@ -24,6 +24,16 @@ router.post('/', async (req, res) => {
     }
 });
 
+// Récupérer les statistiques d'une classe
+router.get('/:classId/stats', async (req, res) => {
+    try {
+        const stats = await db.getClassStatistics(req.params.classId);
+        res.json(stats);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Activer/Désactiver une classe
 router.post('/:classId/toggle', async (req, res) => {
     const { isActive } = req.body;

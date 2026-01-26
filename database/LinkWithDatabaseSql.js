@@ -340,6 +340,27 @@ export async function recordFailure(studentId, levelId) {
             }
         });
     });
-}
+};
+
+export const getClassStatistics = (classId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT 
+                e.name as exercise_name,
+                SUM(p.success_count) as successes,
+                SUM(p.failure_count) as failures
+            FROM progress p
+            JOIN student s ON p.student_id = s.id
+            JOIN level l ON p.level_id = l.id
+            JOIN exercise e ON l.exercise_id = e.id
+            WHERE s.class_id = ?
+            GROUP BY e.name
+        `;
+        db.query(sql, [classId], (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+};
 
 export default db;
