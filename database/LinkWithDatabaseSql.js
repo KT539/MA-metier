@@ -1,6 +1,7 @@
 import mysql from 'mysql2';
 import dotenv from 'dotenv';
-
+// Charge .env
+dotenv.config();
 // --- CONNEXION À LA BASE DE DONNÉES MYSQL ---
 
 const db = mysql.createConnection({
