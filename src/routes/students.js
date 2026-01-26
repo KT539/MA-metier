@@ -128,4 +128,32 @@ router.get('/progress/:classId', async (req, res) => {
     }
 });
 
+router.get('/:studentId/progress/:exerciseName', async (req, res) => {
+    const { studentId, exerciseName } = req.params;
+
+    try {
+        const sql = `
+            SELECT p.level_id
+            FROM progress p
+            JOIN level l ON p.level_id = l.id
+            JOIN exercise e ON l.exercise_id = e.id
+            WHERE p.student_id = ? 
+            AND e.name = ? 
+            AND p.is_completed = 1
+        `;
+
+        db.query(sql, [studentId, decodeURIComponent(exerciseName)], (err, rows) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: "Erreur BDD" });
+            }
+            // On renvoie juste un tableau d'IDs de niveaux terminés
+            const completedLevelIds = rows.map(row => row.level_id);
+            res.json(completedLevelIds);
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;
