@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Jeu - Sur la pile</title>
+    <link rel="stylesheet" href="/CSS/classification.css">
+    <style>
+        .game-board { display: flex; justify-content: space-around; padding: 20px; margin-top: 30px;}
+        .hand-area { width: 60%; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; min-height: 200px; border: 2px dashed #ccc; padding: 20px; border-radius: 10px; }
+        .pile-area { width: 30%; text-align: center; }
+        .card { min-width: 100px; min-height: 100px; object-fit: contain; border: 2px solid #333; border-radius: 10px; background: white; padding: 5px; transition: transform 0.2s; }
+        .card.playable:hover { transform: scale(1.1); cursor: pointer; border-color: #4CAF50; }
+        .pile-card { min-width: 100px; min-height: 100px; border: 4px solid #FF9800; }
+        #msg { text-align: center; font-size: 1.5em; height: 40px; font-weight: bold; }
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 25px;
+            background-color: #ffdc7d;
+            border: 3px solid #e67e22;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            color: black;
+            font-weight: bold;
+            font-size: 1.2em;
+            transition: transform 0.1s;
+        }
+        .back-btn:hover {
+            transform: scale(1.1);
+            background-color: #ffeeb0;
+        }
+    </style>
+</head>
+<body>
+<a href="/classification" class="back-btn">⬅ Retour</a>
+<div id="div-header"><a href="/classification"></a><h1>Sur la pile</h1></div>
+<div id="msg"></div>
+<div class="game-board">
+    <div class="hand-area" id="hand"><p>Chargement...</p></div>
+    <div class="pile-area">
+        <h3>PILE</h3>
+        <img id="pile" class="card pile-card" src="" style="display:none">
+    </div>
+</div>
+<script>
+    let pile = null, hand = [];
+    const levelId = window.location.pathname.split('/').pop();
+    const studentId = sessionStorage.getItem('currentStudentId') || 1;
+
+    // Fonction de conversion de nom (Idem que form)
+    function format(name) {
+        return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().replace(/\s+/g, '_').toLowerCase() + '.png';
+    }
+    function getUrl(path, name) {
+        let p = (path || 'public/images/shapes').replace('public', '');
+        if(!p.startsWith('/')) p = '/'+p;
+        if(!p.endsWith('/')) p += '/';
+        return p + format(name);
+    }
+    // Comparaison (mots clés dans le nom)
+    function match(n1, n2) {
+        const a1 = n1.replace('.png','').split('_');
+        const a2 = n2.replace('.png','').split('_');
+        return a1.some(x => a2.includes(x));
+    }
+
+    (async () => {
+        try {
+            const r = await fetch(`/api/exercises/classification4/${levelId}`);
+            if(!r.ok) throw new Error("Niveau introuvable");
+            const d = await r.json();
+            pile = d.startImage;
+            hand = d.handImages;
+            render();
+        } catch(e) { document.getElementById('hand').innerHTML = "Erreur chargement."; }
+    })();
+
+    function render() {
+        const pImg = document.getElementById('pile');
+        pImg.src = getUrl(pile.url, pile.name);
+        pImg.style.display = 'inline-block';
+
+        const hDiv = document.getElementById('hand');
+        hDiv.innerHTML = '';
+        if(hand.length === 0) {
+            document.getElementById('msg').innerText = "BRAVO !";
+            document.getElementById('msg').style.color = "green";
+            // Sauvegarde victoire
+            return;
+        }
+        hand.forEach((c, i) => {
+            const img = document.createElement('img');
+            img.src = getUrl(c.url, c.name);
+            img.className = 'card playable';
+            img.onclick = () => play(i);
+            hDiv.appendChild(img);
+        });
+    }
+
+    function play(i) {
+        const c = hand[i];
+        if(match(format(c.name), format(pile.name))) {
+            pile = c;
+            hand.splice(i, 1);
+            document.getElementById('msg').innerText = "Bien joué !";
+            document.getElementById('msg').style.color = "green";
+            render();
+        } else {
+            document.getElementById('msg').innerText = "Pas de point commun !";
+            document.getElementById('msg').style.color = "red";
+        }
+    }
+</script>
+</body>
+</html>
