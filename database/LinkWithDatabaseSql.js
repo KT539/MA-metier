@@ -181,15 +181,15 @@ export const deleteStudent = (studentId) => {
 export const getClassProgress = (classId) => {
     return new Promise((resolve, reject) => {
         const sql = `
-            SELECT 
-                s.name, 
+            SELECT
+                s.name,
                 e.name as exercise_type,    -- Nom de l'exercice (ex: Classification)
                 l.id as exercise_level,     -- ID ou numéro du niveau
-                p.is_completed 
+                p.is_completed
             FROM student s
-                LEFT JOIN progress p ON s.id = p.student_id
-                LEFT JOIN level l ON p.level_id = l.id
-                LEFT JOIN exercise e ON l.exercise_id = e.id
+                     LEFT JOIN progress p ON s.id = p.student_id
+                     LEFT JOIN level l ON p.level_id = l.id
+                     LEFT JOIN exercise e ON l.exercise_id = e.id
             WHERE s.class_id = ?
         `;
         db.query(sql, [classId], (err, rows) => {
@@ -213,7 +213,7 @@ export const getShapesImages = () => {
 // create new level
 export const createLevel = (exerciseId, categoryId, imageId1, imageId2, correctAnswer) => {
     return new Promise((resolve, reject) => {
-        const sql = `INSERT INTO level (exercise_id, category_id, image_id_1, image_id_2, correct_answer) 
+        const sql = `INSERT INTO level (exercise_id, category_id, image_id_1, image_id_2, correct_answer)
                      VALUES (?, ?, ?, ?, ?)`;
         db.query(sql, [exerciseId, categoryId, imageId1, imageId2, correctAnswer], (err, result) => {
             if (err) reject(err);
@@ -227,9 +227,9 @@ export const getLevelsByExerciseName = (exerciseName) => {
     return new Promise((resolve, reject) => {
         // On joint les tables level et exercise pour filtrer par nom d'exercice
         const sql = `
-            SELECT l.id, l.exercise_id 
+            SELECT l.id, l.exercise_id
             FROM level l
-            JOIN exercise e ON l.exercise_id = e.id
+                     JOIN exercise e ON l.exercise_id = e.id
             WHERE e.name = ?
             ORDER BY l.id ASC
         `;
@@ -284,7 +284,7 @@ export const saveProgress = (studentId, levelId, isSuccess) => {
             if (err) return reject(err);
 
             if (results.length > 0) {
-                // Mise à jour : on incrémente le succès si c'est réussi
+                // On incrémente le succès si c'est réussi
                 if (isSuccess) {
                     const updateSql = `UPDATE progress SET success_count = success_count + 1, is_completed = 1 WHERE id = ?`;
                     db.query(updateSql, [results[0].id], (e, r) => {
@@ -313,6 +313,126 @@ export const getExerciseIdByName = (name) => {
         db.query(sql, [name], (err, res) => {
             if (err) reject(err);
             else resolve(res[0] ? res[0].id : null);
+        });
+    });
+};
+
+export async function recordFailure(studentId, levelId) {
+    return new Promise((resolve, reject) => {
+        // 1. On vérifie si une entrée existe déjà
+        const checkSql = "SELECT id FROM progress WHERE student_id = ? AND level_id = ?";
+        db.query(checkSql, [studentId, levelId], (err, rows) => {
+            if (err) return reject(err);
+            if (rows.length > 0) {
+                // 2A. Ça existe -> On incrémente failure_count
+                const updateSql = "UPDATE progress SET failure_count = failure_count + 1 WHERE id = ?";
+                db.query(updateSql, [rows[0].id], (err2) => {
+                    if (err2) reject(err2);
+                    else resolve({ status: "updated", id: rows[0].id });
+                });
+            } else {
+                // 2B. Ça n'existe pas -> On crée la ligne avec failure_count = 1
+                const insertSql = "INSERT INTO progress (student_id, level_id, failure_count, success_count, is_completed) VALUES (?, ?, 1, 0, 0)";
+                db.query(insertSql, [studentId, levelId], (err3, result) => {
+                    if (err3) reject(err3);
+                    else resolve({ status: "created", id: result.insertId });
+                });
+            }
+        });
+    });
+};
+
+// Menu déroulant pour les statistiques
+export const getClassStatistics = (classId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT
+                e.name as exercise_name,
+                l.id as level_id,
+                SUM(p.success_count) as successes,
+                SUM(p.failure_count) as failures
+            FROM progress p
+                     JOIN student s ON p.student_id = s.id
+                     JOIN level l ON p.level_id = l.id
+                     JOIN exercise e ON l.exercise_id = e.id
+            WHERE s.class_id = ?
+            GROUP BY e.name, l.id
+            ORDER BY e.name, l.id ASC
+        `;
+        db.query(sql, [classId], (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+};
+
+// --- FONCTIONS SPÉCIFIQUES EXERCICE 4 (SUR LA PILE) ---
+
+// 1. Créer un niveau "Sur la pile" en utilisant level + level_has_images
+export const createLevelPile = (exerciseId, categoryId, startImageId, handImageIds) => {
+    return new Promise((resolve, reject) => {
+        // A. On insère le niveau avec l'image de départ dans image_id_1
+        const sqlLevel = `INSERT INTO level (exercise_id, category_id, image_id_1) VALUES (?, ?, ?)`;
+
+        db.query(sqlLevel, [exerciseId, categoryId, startImageId], (err, result) => {
+            if (err) return reject(err);
+
+            const newLevelId = result.insertId;
+
+            // B. On prépare les données pour la table de liaison level_has_images
+            const values = handImageIds.map(imgId => [newLevelId, imgId]);
+
+            const sqlImages = `INSERT INTO level_has_images (level_id, image_id) VALUES ?`;
+
+            db.query(sqlImages, [values], (errImages) => {
+                if (errImages) return reject(errImages);
+                resolve(newLevelId);
+            });
+        });
+    });
+};
+
+// 2. Récupérer un niveau "Sur la pile" complet
+export const getLevelPileById = (levelId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `
+            SELECT 
+                l.id as level_id,
+                start_img.id as start_id, start_img.name as start_name, start_img.path as start_path,
+                hand_img.id as hand_id, hand_img.name as hand_name, hand_img.path as hand_path
+            FROM level l
+            JOIN image start_img ON l.image_id_1 = start_img.id
+            LEFT JOIN level_has_images lhi ON l.id = lhi.level_id
+            LEFT JOIN image hand_img ON lhi.image_id = hand_img.id
+            WHERE l.id = ?
+        `;
+
+        db.query(sql, [levelId], (err, rows) => {
+            if (err) return reject(err);
+            if (rows.length === 0) return reject(new Error("Niveau introuvable"));
+
+            // On restructure les données (car SQL renvoie une ligne par image de main)
+            const levelData = {
+                id: rows[0].level_id,
+                startImage: {
+                    id: rows[0].start_id,
+                    name: rows[0].start_name,
+                    url: rows[0].start_path
+                },
+                handImages: []
+            };
+
+            rows.forEach(row => {
+                if (row.hand_id) {
+                    levelData.handImages.push({
+                        id: row.hand_id,
+                        name: row.hand_name,
+                        url: row.hand_path
+                    });
+                }
+            });
+
+            resolve(levelData);
         });
     });
 };

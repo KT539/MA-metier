@@ -16,7 +16,7 @@ CREATE TABLE classes (
     is_active TINYINT(1) DEFAULT 0
 );
 
--- 3. NOUVELLE TABLE DE LIAISON (Plusieurs profs <-> Plusieurs classes)
+-- 3. Des profs ont des classes
 CREATE TABLE teacher_has_classes (
     class_id INT NOT NULL,
     teacher_id INT NOT NULL,
@@ -85,6 +85,7 @@ CREATE TABLE progress (
     student_id INT,
     level_id INT,
     success_count INT DEFAULT 0,
+    failure_count INT DEFAULT 0,
     is_completed TINYINT(1) DEFAULT 0,
     CONSTRAINT fk_progress_student FOREIGN KEY (student_id) REFERENCES student(id) ON UPDATE CASCADE,
     CONSTRAINT fk_progress_level FOREIGN KEY (level_id) REFERENCES level(id) ON UPDATE CASCADE

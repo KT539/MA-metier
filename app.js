@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
 import classRoutes from './src/routes/classes.js';
 import studentRoutes from './src/routes/students.js'
-import {getShapesImages, createLevel, getLevelsByExerciseName, getCategories, getExerciseIdByName, getLevelById, saveProgress} from './database/LinkWithDatabaseSql.js';
+import {getShapesImages, createLevel, getLevelsByExerciseName, getCategories, getExerciseIdByName, getLevelById, saveProgress, createLevelPile, getLevelPileById} from './database/LinkWithDatabaseSql.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -62,6 +62,10 @@ app.get('/create_exercises/forms/classification_form1', (req, res) => {
 
 app.get('/create_exercises/forms/classification_form2', (req, res) => {
     res.sendFile(__dirname + '/views/create_exercises/forms/classification_form2.html');
+});
+
+app.get('/create_exercises/forms/classification_form4', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/create_exercises/forms/classification_form4.html'));
 });
 
 app.get('/api/shapes-images', async (req, res) => {
@@ -182,6 +186,50 @@ app.post('/api/progress', async (req, res) => {
 // Page de jeu pour "Quel est le point commun ?"
 app.get('/play/classification2/:id', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/create_exercises/exercise_views/classification2_view.html'));
+});
+
+// --- ROUTE CRÉATION EXERCICE 4 ---
+app.post('/api/create/classification4', async (req, res) => {
+    try {
+        // handImageIds doit être un tableau d'IDs
+        const { startImageId, handImageIds } = req.body;
+
+        const exerciseId = await getExerciseIdByName("Sur la pile");
+        const categories = await getCategories();
+        const classificationCat = categories.find(c => c.name === 'Classification');
+
+        if (!exerciseId || !classificationCat) {
+            return res.status(500).json({ error: "Config BDD manquante" });
+        }
+
+        const newLevelId = await createLevelPile(
+            exerciseId,
+            classificationCat.id,
+            startImageId,
+            handImageIds
+        );
+
+        res.json({ success: true, id: newLevelId });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// --- ROUTE JEU EXERCICE 4 ---
+// Sert la page HTML
+app.get('/play/classification4/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/create_exercises/exercise_views/classification4_view.html'));
+});
+
+// Sert les données JSON pour le JS du jeu
+app.get('/api/exercises/classification4/:id', async (req, res) => {
+    try {
+        const data = await getLevelPileById(req.params.id);
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // --- API ROUTES ---
