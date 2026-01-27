@@ -121,9 +121,9 @@ INSERT INTO exercise (name, category_id) VALUES
     ('Sur la pile', 1);
 
 -- C. Niveaux (Levels)
-INSERT INTO level (exercise_id) VALUES
-    (1), -- ID 1 : Niveau 1 de l'exercice Classification
-    (1); -- ID 1 : Niveau 2 de l'exercice Classification
+INSERT INTO level (exercise_id, category_id, image_id_1, image_id_2, correct_answer) VALUES
+    (1, 1, 27, 41, 0), -- ID 1 : Niveau 1 de l'exercice Classification
+    (1, 1, 35, 35, 1); -- ID 1 : Niveau 2 de l'exercice Classification
 
 -- ============================================================
 -- 7. SIMULATION DE PROGRESSION (Progress)

@@ -8,7 +8,7 @@
 </head>
 <body>
 <div class="container">
-    <a href="#" id="back-to-exercises" class="arrow" title="Retour"></a>
+    <a href="javascript:history.back()" id="back-to-exercises" class="arrow" title="Retour"></a>
 
     <h1>Configuration</h1>
     <p class="category-label">Pareils ou différents ?</p>
@@ -111,6 +111,7 @@
             const result = await res.json();
             if (result.success) {
                 alert("Niveau créé avec succès !");
+                window.location.href = '/exercises_creation';
             } else {
                 alert("Erreur : " + result.error);
             }
