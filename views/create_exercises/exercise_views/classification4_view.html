@@ -8,14 +8,34 @@
         .game-board { display: flex; justify-content: space-around; padding: 20px; margin-top: 30px;}
         .hand-area { width: 60%; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; min-height: 200px; border: 2px dashed #ccc; padding: 20px; border-radius: 10px; }
         .pile-area { width: 30%; text-align: center; }
-        .card { width: 100px; height: 100px; object-fit: contain; border: 2px solid #333; border-radius: 10px; background: white; padding: 5px; transition: transform 0.2s; }
+        .card { min-width: 100px; min-height: 100px; object-fit: contain; border: 2px solid #333; border-radius: 10px; background: white; padding: 5px; transition: transform 0.2s; }
         .card.playable:hover { transform: scale(1.1); cursor: pointer; border-color: #4CAF50; }
-        .pile-card { width: 140px; height: 140px; border: 4px solid #FF9800; }
+        .pile-card { min-width: 100px; min-height: 100px; border: 4px solid #FF9800; }
         #msg { text-align: center; font-size: 1.5em; height: 40px; font-weight: bold; }
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 25px;
+            background-color: #ffdc7d;
+            border: 3px solid #e67e22;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            color: black;
+            font-weight: bold;
+            font-size: 1.2em;
+            transition: transform 0.1s;
+        }
+        .back-btn:hover {
+            transform: scale(1.1);
+            background-color: #ffeeb0;
+        }
     </style>
 </head>
 <body>
-<div id="div-header"><a href="/classification"><div class="arrow"></div></a><h1>Sur la pile</h1></div>
+<a href="/classification" class="back-btn">⬅ Retour</a>
+<div id="div-header"><a href="/classification"></a><h1>Sur la pile</h1></div>
 <div id="msg"></div>
 <div class="game-board">
     <div class="hand-area" id="hand"><p>Chargement...</p></div>
@@ -67,7 +87,7 @@
         if(hand.length === 0) {
             document.getElementById('msg').innerText = "BRAVO !";
             document.getElementById('msg').style.color = "green";
-            // Sauvegarde victoire...
+            // Sauvegarde victoire
             return;
         }
         hand.forEach((c, i) => {
