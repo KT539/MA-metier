@@ -97,15 +97,13 @@ switch (path) {
     case "/classification":
         // 1. "Pareils ou différents" (Si tu as créé la logique backend pour classification1)
         // Sinon, utilise 'null' à la place de 'classification1' si la page de jeu n'existe pas encore
-        fetchAndLoad('exercises-grid-pareils', 'Pareils ou différents', 'classification1', 30, '#ffdc7d');
+        fetchAndLoad('exercises-grid-pareils', 'Pareils ou différents ?', 'classification1', 30, '#ffdc7d');
 
         // 2. "Quel est le point commun ?" (classification2)
         fetchAndLoad('exercises-grid-commun', 'Quel est le point commun ?', 'classification2', 30, '#ffdc7d');
 
-        fetchAndLoad('exercises-grid-images', 'La bonne image', 'classification3', 30, '#ffdc7d');
-
         // Static count for others (until they are added to DB)
-        //loadexercises('exercises-grid-images', 30, '#ffdc7d')
+        loadexercises('exercises-grid-images', 30, '#ffdc7d')
         loadexercises('exercises-grid-pile', 30, '#ffdc7d')
         break;
 

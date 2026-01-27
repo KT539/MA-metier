@@ -8,7 +8,7 @@
 </head>
 <body>
 <div class="container">
-    <a href="#" id="back-to-exercises" class="arrow" title="Retour"></a>
+    <a href="javascript:history.back()" id="back-to-exercises" class="arrow" title="Retour"></a>
 
     <h1>Configuration</h1>
     <p class="category-label">Pareils ou différents ?</p>
@@ -46,53 +46,78 @@
     </form>
 </div>
 <script>
+    let loadedImages = [];
+
     document.addEventListener("DOMContentLoaded", async function() {
-        // get IDs from current URL
-        const params = new URLSearchParams(window.location.search);
-        const catId = params.get('category_id');
-        const exId = params.get('exercise_id');
-        const backBtn = document.getElementById('back-to-exercises');
-
-        if (catId) {
-            document.getElementById('hidden_category_id').value = catId;
-            backBtn.href = `/create_exercises/classification_exercises?category_id=${catId}`;
-        } else {
-            backBtn.href = `/create_exercises/classification_exercises`;
-        }
-
-        if (exId) {
-            document.getElementById('hidden_exercise_id').value = exId;
-        }
-
-        // load images from API
+        // Chargement des images (Formes uniquement)
         const selectBase = document.getElementById('image-base');
         const selectComp = document.getElementById('image-comp');
 
         try {
             const response = await fetch('/api/shapes-images');
-            const images = await response.json();
+            loadedImages = await response.json();
 
-            images.forEach(img => {
+            loadedImages.forEach(img => {
                 const option = document.createElement('option');
                 option.value = img.id;
                 option.textContent = img.name;
-
                 selectBase.appendChild(option.cloneNode(true));
                 selectComp.appendChild(option);
             });
         } catch (error) {
-            console.error("Erreur lors du chargement des images:", error);
+            console.error("Erreur chargement images:", error);
         }
     });
 
-    // validation
-    document.getElementById('exercise-config-form').addEventListener('submit', function(e) {
-        const img1 = document.getElementById('image-base').value;
-        const img2 = document.getElementById('image-comp').value;
+    // Utilitaire pour extraire {shape, color} du nom "carre bleu"
+    function extractInfo(fullName) {
+        if (!fullName) return { shape: "", color: "" };
+        const parts = fullName.trim().split(' ');
+        return { shape: parts[0], color: parts.slice(1).join(' ') };
+    }
 
-        if (!img1 || !img2) {
-            e.preventDefault();
-            alert("Veuillez sélectionner les deux images pour l'exercice.");
+    // Soumission
+    document.getElementById('exercise-config-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const img1Id = document.getElementById('image-base').value;
+        const img2Id = document.getElementById('image-comp').value;
+        const answerVal = document.querySelector('input[name="correct_answer"]:checked').value; // "0" ou "1"
+
+        if (!img1Id || !img2Id) {
+            alert("Veuillez sélectionner les deux images.");
+            return;
+        }
+
+        // Validation Logique
+        const img1Data = loadedImages.find(img => img.id == img1Id);
+        const img2Data = loadedImages.find(img => img.id == img2Id);
+
+        const info1 = extractInfo(img1Data.name);
+        const info2 = extractInfo(img2Data.name);
+
+        // Envoi au serveur bd
+        try {
+            const res = await fetch('/api/create/classification1', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    image1Id: img1Id,
+                    image2Id: img2Id,
+                    correctAnswer: parseInt(answerVal) // Envoie 0 ou 1
+                })
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                alert("Niveau créé avec succès !");
+                window.location.href = '/exercises_creation';
+            } else {
+                alert("Erreur : " + result.error);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erreur serveur.");
         }
     });
 </script>
