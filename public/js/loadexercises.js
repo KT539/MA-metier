@@ -1,13 +1,12 @@
-//function to create circles for each exercise type, modified to work with database data
-function loadexercises(sectionid, data, btncolour, exerciseType) {
+// Fonction principale pour créer les cercles
+function loadexercises(sectionid, data, btncolour, exerciseType, completedIds = []) {
     const grid = document.getElementById(sectionid);
+    if (!grid) return;
 
-    if (!grid) return; // Security check if element doesn't exist
+    grid.innerHTML = '';
 
-    grid.innerHTML = ''; //clear grid
-
-    // Check if data is an array (from DB) or a number (legacy fixed count)
-    // If it's a number, create a dummy array to keep the loop logic working
+    // Gestion données tableau ou nombre fixe
+    // Si data est un nombre (fallback), on crée un tableau d'objets avec des IDs
     const levels = Array.isArray(data) ? data : Array.from({length: data}, (_, i) => ({id: i + 1}));
 
     if (levels.length === 0) {
@@ -15,104 +14,153 @@ function loadexercises(sectionid, data, btncolour, exerciseType) {
         return;
     }
 
-    levels.forEach((level, index) => { //loops through levels data (*replaced fixed number with foreach from db)
-        const circle = document.createElement('div'); //creates circle
+    const safeCompletedIds = Array.isArray(completedIds) ? completedIds : [];
+
+    levels.forEach((level, index) => {
+        const circle = document.createElement('div');
         circle.className = 'exercise-circle';
+        circle.textContent = index + 1;
 
+        // --- LOGIQUE DE VERROUILLAGE & COULEUR ---
 
-        circle.textContent = index + 1; // Displays 1, 2, 3... based on index
+        // 1. Terminé ?
+        const isCompleted = level.id && safeCompletedIds.includes(level.id);
 
+        // 2. Débloqué ?
+        // Règle : Le niveau 1 est toujours ouvert.
+        // Le niveau N est ouvert SI le niveau N-1 est terminé.
+        let isLocked = false;
+
+        if (index > 0) {
+            const prevLevelId = levels[index - 1].id;
+            // Si le niveau précédent existe et qu'il n'est PAS fini, on verrouille l'actuel
+            if (prevLevelId && !safeCompletedIds.includes(prevLevelId)) {
+                isLocked = true;
+            }
+        }
+
+        // --- STYLES ---
+        let bgColor = 'white';
+        let borderColor = '#333';
+        let cursorStyle = 'pointer';
+        let opacity = '1';
+
+        if (isCompleted) {
+            bgColor = '#4CAF50'; // Vert
+            circle.style.color = 'white';
+            borderColor = '#2E7D32';
+        } else if (isLocked) {
+            bgColor = '#ddd';
+            borderColor = '#999';
+            cursorStyle = 'not-allowed';
+            opacity = '0.6';
+        }
 
         Object.assign(circle.style, {
-            width: '55px',
-            height: '55px',
-            borderRadius: '50%',
-            fontSize: '1.3rem',
-            backgroundColor: 'white',
-            border: '3px solid #333',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            boxShadow: '2px 2px 0px #000',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            transition: '0.15s',
-            padding: '0',
-            margin: '5px'
+            width: '55px', height: '55px', borderRadius: '50%',
+            fontSize: '1.3rem', fontWeight: 'bold',
+            backgroundColor: bgColor,
+            border: `3px solid ${borderColor}`,
+            boxShadow: isLocked ? 'none' : '2px 2px 0px #000',
+            cursor: cursorStyle,
+            opacity: opacity,
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            transition: '0.15s', margin: '5px',
+            userSelect: 'none'
         });
 
-        circle.addEventListener('mouseenter', () => {
-            circle.style.transform = 'translateY(-2px)';
-            circle.style.backgroundColor = btncolour;
-        });
+        // --- EVENTS ---
+        if (!isLocked) {
+            circle.addEventListener('mouseenter', () => {
+                if (!isCompleted) circle.style.backgroundColor = btncolour;
+                circle.style.transform = 'translateY(-2px)';
+            });
 
-        circle.addEventListener('mouseleave', () => {
-            circle.style.transform = 'translateY(0px)';
-            circle.style.backgroundColor = 'white';
-        });
+            circle.addEventListener('mouseleave', () => {
+                circle.style.backgroundColor = isCompleted ? '#4CAF50' : 'white';
+                circle.style.transform = 'translateY(0px)';
+            });
 
-        circle.addEventListener('mousedown', () => {
-            circle.style.transform = 'translate(2px, 2px)';
-            circle.style.boxShadow = 'none';
-        });
+            circle.addEventListener('mousedown', () => {
+                circle.style.transform = 'translate(2px, 2px)';
+                circle.style.boxShadow = 'none';
+            });
 
-        circle.addEventListener('mouseup', () => {
-            circle.style.transform = 'translateY(-2px)';
-            circle.style.boxShadow = '2px 2px 0px #000';
+            circle.addEventListener('mouseup', () => {
+                circle.style.transform = 'translateY(-2px)';
+                circle.style.boxShadow = '2px 2px 0px #000';
 
-            // Logic to launch the specific level if ID and Type exist
-            if (level.id && typeof level.id !== 'undefined' && exerciseType) {
-                // Example: /play/classification2/45
-                window.location.href = `/play/${exerciseType}/${level.id}`;
-            } else {
-                console.log("Exercice fictif ou type inconnu (pas de redirection BDD)");
-            }
-        });
+                // Redirection
+                if (level.id && exerciseType) {
+                    window.location.href = `/play/${exerciseType}/${level.id}`;
+                } else {
+                    console.log("Exercice fictif ou type inconnu (pas de redirection)");
+                    // Optionnel : Alert pour dire que c'est un test
+                }
+            });
+        }
 
         grid.appendChild(circle);
     });
 }
 
-// Helper function to fetch exercises from DB
+// Fonction Helper
 async function fetchAndLoad(sectionId, exerciseName, exerciseTypeRoute, fallbackCount, color) {
-    try {
-        // Calls the API created in app.js to get real levels
-        const response = await fetch(`/api/exercises/${encodeURIComponent(exerciseName)}/levels`);
-        if (!response.ok) throw new Error('Erreur réseau');
+    const studentId = sessionStorage.getItem('currentStudentId');
 
-        const levels = await response.json();
-        // Load the grid with the exact number of levels found and pass the route type
-        loadexercises(sectionId, levels, color, exerciseTypeRoute);
+    try {
+        // A. Charger les NIVEAUX
+        const responseLevels = await fetch(`/api/exercises/${encodeURIComponent(exerciseName)}/levels`);
+        if (!responseLevels.ok) throw new Error('Erreur réseau niveaux');
+
+        const levels = await responseLevels.json();
+        if (!levels || levels.length === 0) {
+            throw new Error("Aucun niveau en BDD -> Utilisation du fallback");
+        }
+        // ------------------
+
+        // B. Charger la PROGRESSION
+        let completedIds = [];
+        if (studentId) {
+            try {
+                const responseProg = await fetch(`/api/students/${studentId}/progress/${encodeURIComponent(exerciseName)}`);
+                if (responseProg.ok) {
+                    completedIds = await responseProg.json();
+                }
+            } catch (err) {
+                console.error("Erreur chargement progression:", err);
+            }
+        }
+
+        loadexercises(sectionId, levels, color, exerciseTypeRoute, completedIds);
+
     } catch (error) {
-        console.error("Erreur chargement exercices:", error);
-        // Fallback: load the fixed number if DB fails or exercise name not found
-        loadexercises(sectionId, fallbackCount, color, null);
+        loadexercises(sectionId, fallbackCount, color, exerciseTypeRoute, []);
     }
 }
 
-//Classifications
+// --- INITIALISATION ---
 const path = window.location.pathname;
 
 switch (path) {
     case "/classification":
-        // 1. "Pareils ou différents" (Si tu as créé la logique backend pour classification1)
-        // Sinon, utilise 'null' à la place de 'classification1' si la page de jeu n'existe pas encore
         fetchAndLoad('exercises-grid-pareils', 'Pareils ou différents ?', 'classification1', 30, '#ffdc7d');
-
-        // 2. "Quel est le point commun ?" (classification2)
         fetchAndLoad('exercises-grid-commun', 'Quel est le point commun ?', 'classification2', 30, '#ffdc7d');
 
-        // Static count for others (until they are added to DB)
-        loadexercises('exercises-grid-images', 30, '#ffdc7d')
-        loadexercises('exercises-grid-pile', 30, '#ffdc7d')
+        // Exercices statiques
+        loadexercises('exercises-grid-images', 30, '#ffdc7d', null, []);
+
+        // Exercice 4 : Sur la pile (Dynamique)
+        fetchAndLoad('exercises-grid-pile', 'Sur la pile', 'classification4', 30, '#ffdc7d');
         break;
 
     case "/conservation":
-        loadexercises('exercises-bonne-phrase', 20, '#ffd9f7')
-        loadexercises('exercises-trou-phrase', 20, '#ffd9f7')
-        loadexercises('exercises-moins-autant-plus', 20, '#ffd9f7')
-        loadexercises('exercises-bonne-situation', 20, '#ffd9f7')
-        loadexercises('exercises-trou-phrase2', 20, '#ffd9f7')
-        loadexercises('exercises-complete', 20, '#ffd9f7')
+        // Fallbacks simples pour l'instant
+        loadexercises('exercises-bonne-phrase', 20, '#ffd9f7', null, []);
+        loadexercises('exercises-trou-phrase', 20, '#ffd9f7', null, []);
+        loadexercises('exercises-moins-autant-plus', 20, '#ffd9f7', null, []);
+        loadexercises('exercises-bonne-situation', 20, '#ffd9f7', null, []);
+        loadexercises('exercises-trou-phrase2', 20, '#ffd9f7', null, []);
+        loadexercises('exercises-complete', 20, '#ffd9f7', null, []);
         break;
 }
