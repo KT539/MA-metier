@@ -16,7 +16,7 @@ CREATE TABLE classes (
     is_active TINYINT(1) DEFAULT 0
 );
 
--- 3. NOUVELLE TABLE DE LIAISON (Plusieurs profs <-> Plusieurs classes)
+-- 3. Des profs ont des classes
 CREATE TABLE teacher_has_classes (
     class_id INT NOT NULL,
     teacher_id INT NOT NULL,
