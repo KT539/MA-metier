@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Exercice - La bonne image</title>
+    <link rel="stylesheet" href="/CSS/classification_form.css">
+</head>
+<body>
+<div class="container">
+    <a href="/create_exercises/classification_exercises" id="back-to-exercises" class="arrow" title="Retour"></a>
+
+    <h1>Configuration</h1>
+    <p class="category-label">La bonne image</p>
+
+    <form id="exercise-config-form">
+        <div class="form-group">
+            <label for="image-base">Image de base :</label>
+            <select id="image-base" name="image_id_1" required>
+                <option value="">-- Veuillez choisir une image --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="image-bonne">Bonne image :</label>
+            <select id="image-bonne" name="image_id_2" required>
+                <option value="">-- Veuillez choisir une image --</option>
+            </select>
+        </div>
+
+                <div class="form-group">
+            <label for="image-fausse1">Fausse image :</label>
+            <select id="image-fausse1" name="image_id_3" required>
+                <option value="">-- Veuillez choisir une image --</option>
+            </select>
+        </div>
+
+                <div class="form-group">
+            <label for="image-fausse2">Fausse image :</label>
+            <select id="image-fausse2" name="image_id_4" required>
+                <option value="">-- Veuillez choisir une image --</option>
+            </select>
+        </div>
+
+        <button type="submit" class="cat-btn cat-orange">Générer le niveau</button>
+    </form>
+</div>
+
+<script>
+    let loadedImages = [];
+
+    document.addEventListener("DOMContentLoaded", async function() {
+        // IDs of all 4 select elements
+        const selectIds = ['image-base', 'image-bonne', 'image-fausse1', 'image-fausse2'];
+        const selects = selectIds.map(id => document.getElementById(id));
+
+        try {
+            const response = await fetch('/api/shapes-images');
+            loadedImages = await response.json();
+
+            loadedImages.forEach(img => {
+                selects.forEach(select => {
+                    const option = document.createElement('option');
+                    option.value = img.id;
+                    option.textContent = img.name;
+                    select.appendChild(option);
+                });
+            });
+        } catch (error) {
+            console.error("Erreur chargement images:", error);
+        }
+    });
+
+    // Inside classification_form3.html <script>
+
+document.getElementById('exercise-config-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // 1. Get the IDs from the selects
+    const idBase = document.getElementById('image-base').value;
+    const idBonne = document.getElementById('image-bonne').value;
+    const idFausse1 = document.getElementById('image-fausse1').value;
+    const idFausse2 = document.getElementById('image-fausse2').value;
+
+    // 2. Find the full objects in loadedImages to get their names
+    const imgBase = loadedImages.find(img => img.id == idBase);
+    const imgBonne = loadedImages.find(img => img.id == idBonne);
+    const imgFausse1 = loadedImages.find(img => img.id == idFausse1);
+    const imgFausse2 = loadedImages.find(img => img.id == idFausse2);
+
+    // Helper to split "Carré bleu" into {shape: "carré", color: "bleu"}
+    const getDetails = (img) => {
+        if (!img) return { shape: '', color: '' };
+        const parts = img.name.toLowerCase().split(' ');
+        return { shape: parts[0], color: parts[1] };
+    };
+
+    const base = getDetails(imgBase);
+    const bonne = getDetails(imgBonne);
+    const f1 = getDetails(imgFausse1);
+    const f2 = getDetails(imgFausse2);
+
+    // --- VALIDATION 1: The correct image MUST share shape OR color ---
+    const sharesSomething = (bonne.shape === base.shape || bonne.color === base.color);
+    if (!sharesSomething) {
+        alert("Erreur : La 'Bonne image' doit avoir soit la même forme, soit la même couleur que l'image de base !");
+        return;
+    }
+
+    // --- VALIDATION 2: The false images MUST NOT share anything ---
+    const f1Bad = (f1.shape === base.shape || f1.color === base.color);
+    const f2Bad = (f2.shape === base.shape || f2.color === base.color);
+
+    if (f1Bad || f2Bad) {
+        alert("Erreur : Les 'Fausses images' ne doivent avoir ni la même forme ni la même couleur que l'image de base !");
+        return;
+    }
+
+    // 3. If validation passes, proceed with fetch
+    const data = {
+        exercise_id: 3,
+        category_id: 1,
+        image_id_1: idBase,
+        image_id_2: idBonne,
+        image_id_3: idFausse1,
+        image_id_4: idFausse2,
+        correct_answer: idBonne 
+    };
+
+    try {
+        const res = await fetch('/api/create/classification3', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        if (result.success) {
+            alert("Niveau créé avec succès !");
+            this.reset(); // Clear form
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Erreur lors de la sauvegarde.");
+    }
+});
+</script>
+</body>
+</html>

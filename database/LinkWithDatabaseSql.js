@@ -222,6 +222,19 @@ export const createLevel = (exerciseId, categoryId, imageId1, imageId2, correctA
     });
 };
 
+//test
+export const createLevel2 = (exerciseId, categoryId, imageId1, imageId2, imageId3, imageId4, correctAnswer) => {
+    return new Promise((resolve, reject) => {
+        const sql = `INSERT INTO level (exercise_id, category_id, image_id_1, image_id_2, image_id_3, image_id_4, correct_answer)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        db.query(sql, [exerciseId, categoryId, imageId1, imageId2, imageId3, imageId4, correctAnswer], (err, result) => {
+            if (err) reject(err);
+            else resolve(result.insertId);
+        });
+    });
+};
+
+
 // Récupérer les niveaux pour un type d'exercice donné (par nom)
 export const getLevelsByExerciseName = (exerciseName) => {
     return new Promise((resolve, reject) => {
@@ -257,14 +270,18 @@ export const getCategories = () => {
 export const getLevelById = (levelId) => {
     return new Promise((resolve, reject) => {
         const sql = `
-            SELECT
-                l.id,
+            SELECT 
+                l.id, 
                 l.correct_answer,
-                i1.name as image1_name, -- On a besoin du NOM (ex: "carre bleu")
-                i2.name as image2_name
+                i1.name as image1_name,
+                i2.name as image2_name,
+                i3.name as image3_name, -- Added image 3
+                i4.name as image4_name  -- Added image 4
             FROM level l
-                     LEFT JOIN image i1 ON l.image_id_1 = i1.id
-                     LEFT JOIN image i2 ON l.image_id_2 = i2.id
+            LEFT JOIN image i1 ON l.image_id_1 = i1.id
+            LEFT JOIN image i2 ON l.image_id_2 = i2.id
+            LEFT JOIN image i3 ON l.image_id_3 = i3.id -- Added join
+            LEFT JOIN image i4 ON l.image_id_4 = i4.id -- Added join
             WHERE l.id = ?
         `;
         db.query(sql, [levelId], (err, result) => {

@@ -148,14 +148,14 @@ switch (path) {
         fetchAndLoad('exercises-grid-commun', 'Quel est le point commun ?', 'classification2', 30, '#ffdc7d');
 
         // Exercices statiques
-        loadexercises('exercises-grid-images', 30, '#ffdc7d', null, []);
+        fetchAndLoad('exercises-grid-images', 'la bonne image','classification3', 30, '#ffdc7d');
 
         // Exercice 4 : Sur la pile (Dynamique)
         fetchAndLoad('exercises-grid-pile', 'Sur la pile', 'classification4', 30, '#ffdc7d');
         break;
 
     case "/conservation":
-        // Fallbacks simples pour l'instant
+        // Fallbacks simples pour l'instantS
         loadexercises('exercises-bonne-phrase', 20, '#ffd9f7', null, []);
         loadexercises('exercises-trou-phrase', 20, '#ffd9f7', null, []);
         loadexercises('exercises-moins-autant-plus', 20, '#ffd9f7', null, []);
