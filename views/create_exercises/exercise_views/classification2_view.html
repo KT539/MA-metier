@@ -72,7 +72,7 @@
         <img id="img2" class="game-img" src="" alt="Image 2" onerror="this.style.display='none'">
     </div>
 
-    <button class="speak-btn" onclick="speak('instruction'),speak('ans-forme'),speak('ans-couleur')">
+    <button class="speak-btn" onclick="speak(['instruction', 'ans-forme', 'ans-couleur'])">
         <span class="speaker-emoji">🔊</span> 
     </button>
     <h2 id="instruction">Choisis la bonne réponse :</h2>
@@ -169,24 +169,24 @@
 
     const synth = window.speechSynthesis;
 
-    function speak(elementId) {
-        // 1. Check if the browser is already speaking
-        if (synth.speaking) {
-            console.log("Speech synthesis is already in progress...");
-            return; // Exit the function so it doesn't queue another one
-        }
+    function speak(ids) {
+        // 1. Still prevent overlapping if the user clicks the button again while it's playing
+        if (synth.speaking) return;
 
-        const element = document.getElementById(elementId);
+        // 2. Convert a single string to an array if necessary
+        const idList = Array.isArray(ids) ? ids : [ids];
         
-        if (element) {
-            const utterance = new SpeechSynthesisUtterance(element.textContent);
-            
-            // Optional: Set the language to match your content
-            utterance.lang = 'fr-FR'; 
+        // 3. Combine the text from all elements
+        let combinedText = "";
+        idList.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) combinedText += el.textContent + ". "; // Added a pause between elements
+        });
 
+        if (combinedText.trim() !== "") {
+            const utterance = new SpeechSynthesisUtterance(combinedText);
+            utterance.lang = 'fr-FR';
             synth.speak(utterance);
-        } else {
-            console.error("Could not find element with ID:", elementId);
         }
     }
 

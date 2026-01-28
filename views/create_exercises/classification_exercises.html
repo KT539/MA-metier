@@ -37,6 +37,21 @@
             btn.setAttribute('href', `${baseUrl}?category_id=${catId}&exercise_id=${exerciseId}`);
         });
     }
+
+    const synth = window.speechSynthesis;
+
+function speak(elementId) {
+    const element = document.getElementById(elementId);
+    
+    if (element) {
+        const utterance = new SpeechSynthesisUtterance(element.textContent);
+        
+        synth.speak(utterance);
+    } else {
+        console.error("Could not find element with ID:", elementId);
+    }
+}
+
 </script>
 </body>
 </html>
