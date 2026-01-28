@@ -63,6 +63,8 @@ CREATE TABLE level (
     category_id INT,
     image_id_1 INT,
     image_id_2 INT,
+    image_id_3 INT,
+    image_id_4 INT,
     correct_answer BOOLEAN,
     CONSTRAINT fk_level_exercise FOREIGN KEY (exercise_id) REFERENCES exercise(id) ON UPDATE CASCADE,
     CONSTRAINT fk_level_category FOREIGN KEY (category_id) REFERENCES category(id) ON UPDATE CASCADE,

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
 import classRoutes from './src/routes/classes.js';
 import studentRoutes from './src/routes/students.js'
-import {getShapesImages, createLevel, getLevelsByExerciseName, getCategories, getExerciseIdByName, getLevelById, saveProgress, createLevelPile, getLevelPileById} from './database/LinkWithDatabaseSql.js';
+import {getShapesImages, createLevel, createLevel2, getLevelsByExerciseName, getCategories, getExerciseIdByName, getLevelById, saveProgress, createLevelPile, getLevelPileById} from './database/LinkWithDatabaseSql.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -62,6 +62,10 @@ app.get('/create_exercises/forms/classification_form1', (req, res) => {
 
 app.get('/create_exercises/forms/classification_form2', (req, res) => {
     res.sendFile(__dirname + '/views/create_exercises/forms/classification_form2.html');
+});
+
+app.get('/create_exercises/forms/classification_form3', (req, res) => {
+    res.sendFile(__dirname + '/views/create_exercises/forms/classification_form3.html');
 });
 
 app.get('/create_exercises/forms/classification_form4', (req, res) => {
@@ -231,6 +235,44 @@ app.get('/api/exercises/classification4/:id', async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+
+
+app.get('/play/classification3/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/create_exercises/exercise_views/classification3_view.html'));
+});
+
+app.post('/api/create/classification3', async (req, res) => {
+    try {
+        // Extract names exactly as they are sent from your HTML/JS
+        const { 
+            exercise_id, 
+            category_id, 
+            image_id_1, 
+            image_id_2, 
+            image_id_3, 
+            image_id_4, 
+            correct_answer 
+        } = req.body;
+
+        // Call your database function
+        const newLevelId = await createLevel2(
+            exercise_id, 
+            category_id, 
+            image_id_1, 
+            image_id_2, 
+            image_id_3, 
+            image_id_4, 
+            correct_answer
+        );
+
+        console.log(`Classification 3 created: ID ${newLevelId}`);
+        res.json({ success: true, id: newLevelId });
+    } catch (e) {
+        console.error("Save Error:", e);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
+});
+
 
 // --- API ROUTES ---
 // On utilise les fichiers créés dans src/routes
