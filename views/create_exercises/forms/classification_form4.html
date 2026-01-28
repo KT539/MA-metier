@@ -180,7 +180,7 @@
             const result = await res.json();
             if (result.success) {
                 alert("Niveau créé avec succès !");
-                window.history.back(); // Retour à la liste
+                window.location.href = '/exercises_creation';
             } else {
                 alert("Erreur serveur : " + (result.error || "Inconnue"));
             }

@@ -138,6 +138,7 @@ document.getElementById('exercise-config-form').addEventListener('submit', async
         if (result.success) {
             alert("Niveau créé avec succès !");
             this.reset(); // Clear form
+            window.location.href = '/exercises_creation';
         }
     } catch (err) {
         console.error(err);

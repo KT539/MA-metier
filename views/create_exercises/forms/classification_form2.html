@@ -121,6 +121,7 @@
             const result = await res.json();
             if (result.success) {
                 alert("Niveau créé avec succès !");
+                window.location.href = '/exercises_creation';
             } else {
                 alert("Erreur : " + result.error);
             }
