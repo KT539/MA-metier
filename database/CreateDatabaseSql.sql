@@ -69,7 +69,9 @@ CREATE TABLE level (
     CONSTRAINT fk_level_exercise FOREIGN KEY (exercise_id) REFERENCES exercise(id) ON UPDATE CASCADE,
     CONSTRAINT fk_level_category FOREIGN KEY (category_id) REFERENCES category(id) ON UPDATE CASCADE,
     CONSTRAINT fk_level_image1 FOREIGN KEY (image_id_1) REFERENCES image(id) ON UPDATE CASCADE,
-    CONSTRAINT fk_level_image2 FOREIGN KEY (image_id_2) REFERENCES image(id) ON UPDATE CASCADE
+    CONSTRAINT fk_level_image2 FOREIGN KEY (image_id_2) REFERENCES image(id) ON UPDATE CASCADE,
+    CONSTRAINT fk_level_image3 FOREIGN KEY (image_id_3) REFERENCES image(id) ON UPDATE CASCADE,
+    CONSTRAINT fk_level_image4 FOREIGN KEY (image_id_4) REFERENCES image(id) ON UPDATE CASCADE
 );
 
 -- 9. Table Level_has_images

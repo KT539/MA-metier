@@ -66,7 +66,8 @@
         return a1.some(x => a2.includes(x));
     }
 
-    (async () => {
+    // Fonction d'initialisation du jeu
+    async function initGame() {
         try {
             const r = await fetch(`/api/exercises/classification4/${levelId}`);
             if(!r.ok) throw new Error("Niveau introuvable");
@@ -75,7 +76,7 @@
             hand = d.handImages;
             render();
         } catch(e) { document.getElementById('hand').innerHTML = "Erreur chargement."; }
-    })();
+    }
 
     function render() {
         const pImg = document.getElementById('pile');
@@ -84,12 +85,16 @@
 
         const hDiv = document.getElementById('hand');
         hDiv.innerHTML = '';
+
+        // Vérification de victoire
         if(hand.length === 0) {
             document.getElementById('msg').innerText = "BRAVO !";
             document.getElementById('msg').style.color = "green";
-            // Sauvegarde victoire
+            // Sauvegarde victoire et redirection
+            handleWin();
             return;
         }
+
         hand.forEach((c, i) => {
             const img = document.createElement('img');
             img.src = getUrl(c.url, c.name);
@@ -97,6 +102,9 @@
             img.onclick = () => play(i);
             hDiv.appendChild(img);
         });
+
+        // Vérification si le joueur est coincé
+        checkPossibleMoves();
     }
 
     function play(i) {
@@ -112,6 +120,51 @@
             document.getElementById('msg').style.color = "red";
         }
     }
+
+    // Vérifie s'il reste des coups jouables
+    function checkPossibleMoves() {
+        if (hand.length === 0) return;
+
+        const hasMove = hand.some(c => match(format(c.name), format(pile.name)));
+
+        if (!hasMove) {
+            document.getElementById('msg').innerText = "Bloqué ! Plus de cartes jouables.";
+            document.getElementById('msg').style.color = "orange";
+            // Enregistrement de l'échec
+            sendWrongAnswer(studentId, levelId);
+        }
+    }
+
+    // Gestion de la victoire
+    async function handleWin() {
+        await saveSuccess(studentId);
+        setTimeout(() => {
+            window.location.href = '/classification'; }, 1500);
+    }
+
+    // Fonction pour enregistrer l'échec
+    async function sendWrongAnswer(studentId, levelId) {
+        try {
+            await fetch('/api/students/progress/fail', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ studentId, levelId })
+            });
+        } catch(e) { console.error("Erreur enregistrement échec", e); }
+    }
+
+    // Fonction pour enregistrer le succès
+    async function saveSuccess(studentId) {
+        try {
+            await fetch('/api/progress', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ studentId, levelId, isSuccess: true })
+            });
+        } catch(e) { console.error("Erreur sauvegarde succès", e); }
+    }
+
+    initGame();
 </script>
 </body>
 </html>
