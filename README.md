@@ -16,7 +16,9 @@
 - La conservation aide l'enfant à comprendre qu'une quantité reste identique malgré un changement d'apparence visuelle et la combinatoire développe les capacités de logique pour explorer toutes les solutions possibles d'un problème donné.
 
 ## Instructions 
-- Cloner le projet
-- Initialiser Git-Flow et se positionner sur la branche develop.
+- Clôner le projet.
+- Lancer le script SQL dans un client SQL pour créer la base de données.
+- Lancer un environnement de développement, initialiser Git-Flow et se positionner sur la branche develop.
 - Saisir la commande npm install dans la console.
 - Saisir la commande npm run dev dans la console pour lancer le serveur de développement.
+- Le site est maintenant accessible sur le port 3000.
