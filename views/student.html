@@ -37,7 +37,6 @@
 </div>
 
 <div id="student-app" style="display:none; text-align: center;">
-    <button class="admin-btn" onclick="resetClass()">⚙️ Changer de classe</button>
     <h1 id="welcome-msg">Qui es-tu ?</h1>
     <div class="student-grid" id="student-grid"></div>
 
@@ -57,10 +56,28 @@
     let currentClassId = null;
 
     async function init() {
+        // 1. Vérifier si un ID de classe est passé dans l'URL (ex: /student-area?classId=5)
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramClassId = urlParams.get('classId');
+
+        if (paramClassId) {
+            currentClassId = paramClassId;
+            // On sauvegarde dans le localStorage pour que l'ID persiste si on rafraîchit la page
+            localStorage.setItem('currentClassId', currentClassId);
+            showStudentApp();
+            return;
+        }
+
         const teacherId = localStorage.getItem('teacherId');
 
         // SYNCHRO : On lit ce que la page Prof a écrit dans la mémoire
         const savedClassId = localStorage.getItem('currentClassId');
+
+        // async function init() {
+        // const teacherId = localStorage.getItem('teacherId');
+
+        // SYNCHRO : On lit ce que la page Prof a écrit dans la mémoire
+        //  const savedClassId = localStorage.getItem('currentClassId');
 
         const savedStudentId = sessionStorage.getItem('currentStudentId');
         const savedStudentName = sessionStorage.getItem('currentStudentName');
@@ -119,7 +136,10 @@
         document.getElementById('student-grid').style.display = 'flex';
         document.getElementById('welcome-msg').style.display = 'block';
         document.getElementById('exercise-menu').style.display = 'none';
-        document.querySelector('.admin-btn').style.display = 'inline-block';
+
+        // --- MISE EN COMMENTAIRE POUR DÉSACTIVER LE BOUTON ADMIN ---
+        // document.querySelector('.admin-btn').style.display = 'inline-block';
+
         loadStudentsForGrid();
     }
 
@@ -162,7 +182,10 @@
     function showExerciseMenu(studentName) {
         document.getElementById('student-grid').style.display = 'none';
         document.getElementById('welcome-msg').style.display = 'none';
-        document.querySelector('.admin-btn').style.display = 'none';
+
+        // --- MISE EN COMMENTAIRE POUR DÉSACTIVER LE BOUTON ADMIN ---
+        // document.querySelector('.admin-btn').style.display = 'none';
+
         const menu = document.getElementById('exercise-menu');
         menu.style.display = 'block';
         menu.classList.remove('hidden');
