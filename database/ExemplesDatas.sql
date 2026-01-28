@@ -106,17 +106,17 @@ INSERT INTO student (name, image_id, class_id) VALUES
 -- On crée la structure hiérarchique : Category -> Exercise -> Level
 
 -- A. Catégories
-INSERT INTO category (name) VALUES
-    ('Classification'), -- ID 1
-    ('Combinatoire'), -- ID 2
-    ('Conservation'), -- ID 3
-    ('Sériation'); -- ID 4
+-- INSERT INTO category (name) VALUES
+--    ('Classification'), -- ID 1
+--    ('Combinatoire'), -- ID 2
+--    ('Conservation'), -- ID 3
+--    ('Sériation'); -- ID 4
 -- B. Exercices
-INSERT INTO exercise (name, category_id) VALUES
-    ('Pareils ou différents ?', 1),
-    ('Quel est le point commun ?', 1),
-    ('La bonne image', 1),
-    ('Sur la pile', 1);
+-- INSERT INTO exercise (name, category_id) VALUES
+--    ('Pareils ou différents ?', 1),
+--    ('Quel est le point commun ?', 1),
+--    ('La bonne image', 1),
+--    ('Sur la pile', 1);
 
 -- C. Niveaux (Levels)
 INSERT INTO level (exercise_id, category_id, image_id_1, image_id_2, correct_answer) VALUES
