@@ -135,7 +135,18 @@ async function fetchAndLoad(sectionId, exerciseName, exerciseTypeRoute, fallback
         loadexercises(sectionId, levels, color, exerciseTypeRoute, completedIds);
 
     } catch (error) {
-        loadexercises(sectionId, fallbackCount, color, exerciseTypeRoute, []);
+        console.log("Aucun exercice trouvé pour : " + exerciseName);
+
+        // On récupère la zone d'affichage
+        const grid = document.getElementById(sectionId);
+
+        // Option A : On affiche un message pour dire en construction
+        if (grid) {
+            grid.innerHTML = '<p style="font-style:italic; color:gray;">Aucun exercice disponible pour le moment.</p>';
+        }
+
+        // Option B : On cache complètement la section
+        // if (grid) grid.style.display = 'none';
     }
 }
 
