@@ -154,6 +154,19 @@ INSERT INTO image (name, path) VALUES
 ('triangle jaune', 'public/images/shapes'),
 ('triangle rose', 'public/images/shapes'),
 ('triangle vert', 'public/images/shapes');
+
+-- A. Catégories
+INSERT INTO category (name) VALUES
+    ('Classification'), -- ID 1
+    ('Combinatoire'), -- ID 2
+    ('Conservation'), -- ID 3
+    ('Sériation'); -- ID 4
+-- B. Exercices
+INSERT INTO exercise (name, category_id) VALUES
+    ('Pareils ou différents ?', 1),
+    ('Quel est le point commun ?', 1),
+    ('La bonne image', 1),
+    ('Sur la pile', 1);
 -- 11. Table Class_Exercise_Data
 -- CREATE TABLE class_exercise_data (
 --    id INT AUTO_INCREMENT PRIMARY KEY,
