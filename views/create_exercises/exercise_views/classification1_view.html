@@ -76,7 +76,10 @@
         <img id="img2" class="game-img" src="" alt="Image 2" onerror="this.style.display='none'">
     </div>
 
-    <h2>Les dessins sont-ils pareils ou différents ?<br>Clique sur la bonne réponse :</h2>
+    <button class="speak-btn" onclick="speak('question')">
+        <span class="speaker-emoji">🔊</span> 
+    </button>
+    <h2 id="question">Les dessins sont-ils pareils ou différents ?<br>Clique sur la bonne réponse :</h2>
 
     <div class="answers-area">
         <button class="answer-btn" onclick="checkAnswer(1)">
@@ -89,6 +92,7 @@
 
     <div id="feedback" class="feedback"></div>
 </div>
+
 
 <script>
     const levelId = window.location.pathname.split('/').pop();
@@ -166,6 +170,32 @@
     }
 
     initGame();
+   
+    const synth = window.speechSynthesis;
+
+    function speak(elementId) {
+        // 1. Check if the browser is already speaking
+        if (synth.speaking) {
+            console.log("Speech synthesis is already in progress...");
+            return; // Exit the function so it doesn't queue another one
+        }
+
+        const element = document.getElementById(elementId);
+        
+        if (element) {
+            const utterance = new SpeechSynthesisUtterance(element.textContent);
+            
+            // Optional: Set the language to match your content
+            utterance.lang = 'fr-FR'; 
+
+            synth.speak(utterance);
+        } else {
+            console.error("Could not find element with ID:", elementId);
+        }
+    }
+
+
+
 </script>
 </body>
 </html>

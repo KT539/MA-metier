@@ -40,7 +40,10 @@
 <div class="game-container">
 
     <div class="base-area">
-        <p style="font-size: 40px;">Trouve l’image qui a exactement un point commun avec l’image présentée. Clique sur la bonne image.</p>
+        <button class="speak-btn" onclick="speak('question')">
+            <span class="speaker-emoji">🔊</span> 
+        </button>
+        <p style="font-size: 40px;" id="question">Trouve l’image qui a exactement un point commun avec l’image présentée. Clique sur la bonne image.</p>
         <img id="img-base" class="base-img" src="" alt="Base">
     </div>
 
@@ -123,6 +126,31 @@
     }
 
     initGame();
+
+    const synth = window.speechSynthesis;
+
+    function speak(elementId) {
+        // 1. Check if the browser is already speaking
+        if (synth.speaking) {
+            console.log("Speech synthesis is already in progress...");
+            return; // Exit the function so it doesn't queue another one
+        }
+
+        const element = document.getElementById(elementId);
+        
+        if (element) {
+            const utterance = new SpeechSynthesisUtterance(element.textContent);
+            
+            // Optional: Set the language to match your content
+            utterance.lang = 'fr-FR'; 
+
+            synth.speak(utterance);
+        } else {
+            console.error("Could not find element with ID:", elementId);
+        }
+    }
+
+
 </script>
 </body>
 </html>

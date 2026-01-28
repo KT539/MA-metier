@@ -165,6 +165,31 @@
     }
 
     initGame();
+
+
+    const synth = window.speechSynthesis;
+
+    function speak(elementId) {
+        // 1. Check if the browser is already speaking
+        if (synth.speaking) {
+            console.log("Speech synthesis is already in progress...");
+            return; // Exit the function so it doesn't queue another one
+        }
+
+        const element = document.getElementById(elementId);
+        
+        if (element) {
+            const utterance = new SpeechSynthesisUtterance(element.textContent);
+            
+            // Optional: Set the language to match your content
+            utterance.lang = 'fr-FR'; 
+
+            synth.speak(utterance);
+        } else {
+            console.error("Could not find element with ID:", elementId);
+        }
+    }
+
 </script>
 </body>
 </html>
