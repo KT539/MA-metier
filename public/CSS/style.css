@@ -1,4 +1,10 @@
-/* Page globale */
+/* Pages combinatoire, login, student, teacher et classification_views */
+/* Reset & variables */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 :root {
     --combinatoire-color: #ff866d;
@@ -20,10 +26,11 @@ body {
     font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
     text-align: center;
     padding: 20px;
+    color: var(--color-dark);
 }
 
 h1 {
-    font-size: 3rem;
+    font-size: clamp(2rem, 5vw, 3rem);
     margin-bottom: 30px;
 }
 
@@ -32,38 +39,46 @@ h1 {
     display: flex;
     justify-content: space-around;
     align-items: flex-start;
+    gap: 30px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
+/* Grille des élèves */
 .student-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    background: transparent;
+    gap: 15px;
+    flex-grow: 1;
 }
 
 .student-slot {
     background: var(--color-white);
     border: 2px solid var(--color-dark);
-    width: 100px;
-    padding: 5px;
-    transition: transform var(--transition-fast);
+    width: 100%;
+    min-width: 90px;
+    max-width: 120px;
+    padding: 10px;
+    border-radius: 8px;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.student-slot:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-retro);
 }
 
 .placeholder-img {
-    height: 100px;
-    width: 100%;
+    aspect-ratio: 1 / 1;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 5px;
-    box-sizing: border-box;
 }
 
 .placeholder-img img {
-    width: 90%;
-    height: 90%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
 }
 
@@ -71,32 +86,29 @@ h1 {
 .page-combinatoire {
     background-color: var(--bg-secondary);
     text-align: left;
+    min-height: 100vh;
 }
 
 .page-combinatoire .main-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 30px 40px;
-    display: flex;
     flex-direction: column;
     align-items: flex-start;
+    padding: 30px 40px;
 }
 
 .page-combinatoire .title-row {
     display: flex;
-    justify-content: center;
     align-items: center;
     gap: 20px;
     margin-bottom: 35px;
 }
 
 .page-combinatoire .arrow {
-    width: 45px;
-    height: 45px;
+    width: 40px;
+    height: 40px;
     background: var(--combinatoire-color);
     clip-path: polygon(100% 0, 0 50%, 100% 100%);
     cursor: pointer;
-    transition: var(--transition-fast);
+    transition: transform var(--transition-fast);
 }
 
 .page-combinatoire .arrow:hover {
@@ -104,89 +116,83 @@ h1 {
 }
 
 .page-combinatoire .section {
-    margin-bottom: 45px;
+    margin-bottom: 40px;
     width: 100%;
 }
 
 .page-combinatoire .section h2 {
     font-size: 1.4rem;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     color: var(--combinatoire-color);
-    font-weight: bold;
     text-decoration: underline;
 }
 
 /* Grille de boutons niveaux */
-.page-combinatoire .button-grid {
+.button-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
-    max-width: 100%;
+    gap: 15px;
 }
 
-.page-combinatoire .button-grid .level-break {
-    margin-right: 35px;
-}
-
-.page-combinatoire .button-grid button {
-    width: 55px;
-    height: 55px;
+.button-grid button {
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     font-size: 1.3rem;
+    font-weight: bold;
     background-color: var(--color-white);
     border: 3px solid var(--color-dark);
     cursor: pointer;
-    font-weight: bold;
-    box-shadow: 2px 2px 0px var(--shadow-retro);
+    box-shadow: var(--shadow-retro);
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: var(--transition-fast);
-    padding: 0;
+    transition: all var(--transition-fast);
 }
 
-.page-combinatoire .button-grid button:hover {
-    transform: translateY(-2px);
+.button-grid button:hover {
+    transform: translateY(-3px);
     background-color: #dffce0;
 }
 
-.page-combinatoire .button-grid button:active {
+.button-grid button:active {
     transform: translate(2px, 2px);
     box-shadow: none;
 }
 
-/* Sidebar & Boutons */
+/* Sidebar & boutons */
 .sidebar {
-    width: 300px;
+    width: 320px;
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: 30px;
 }
 
 .prof-space input {
     display: block;
     width: 100%;
-    margin: 5px 0;
-    padding: 10px;
+    margin-top: 10px;
+    padding: 12px;
     border: 2px solid var(--color-dark);
+    border-radius: 8px;
 }
 
 .cat-btn {
-    display: block;
-    margin: 10px 0;
-    padding: 15px;
+    display: inline-block;
+    padding: 18px 30px;
     border: 2px solid var(--color-dark);
-    border-radius: 10px;
+    border-radius: 12px;
     text-decoration: none;
-    color: black;
+    color: var(--color-dark);
     font-weight: bold;
-    font-size: 1.5rem;
-    box-shadow: 2px 2px 0px var(--shadow-retro);
-    transition: var(--transition-fast) box-shadow; var(--transition-fast);
+    font-size: 1.4rem;
+    box-shadow: var(--shadow-retro);
+    transition: all var(--transition-fast);
+    cursor: pointer;
 }
 
 .cat-btn:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     filter: brightness(1.05);
 }
 
@@ -195,54 +201,51 @@ h1 {
     box-shadow: none;
 }
 
-/* Specific colors */
 .cat-orange { background-color: var(--cat-orange); }
 .cat-coral  { background-color: var(--cat-coral); }
 .cat-green  { background-color: var(--cat-green); }
 .cat-pink   { background-color: var(--cat-pink); }
+
 
 /* Responsive */
 @media (max-width: 1024px) {
     .main-container {
         flex-direction: column;
         align-items: center;
-    }
-
-    .sidebar {
-        width: 100%;
-        margin-top: 40px;
+        padding: 0 20px;
     }
 
     .student-grid {
         grid-template-columns: repeat(4, 1fr);
+        width: 100%;
+        max-width: 800px;
+    }
+
+    .sidebar {
+        width: 100%;
+        max-width: 600px;
+        margin-top: 50px;
     }
 }
 
 @media (max-width: 768px) {
+    body { padding: 10px; }
+
     .student-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-    }
-
-    .student-slot {
-        width: 120px;
-        padding: 15px;
-    }
-
-    h1 {
-        font-size: 2rem;
+        gap: 10px;
     }
 
     .cat-btn {
         font-size: 1.2rem;
+        padding: 15px;
+    }
+
+    .page-combinatoire .main-container {
         padding: 20px;
     }
 
-    .page-combinatoire .button-grid {
+    .button-grid {
         justify-content: center;
-    }
-
-    .page-combinatoire .button-grid .level-break {
-        margin-right: 12px;
     }
 }
