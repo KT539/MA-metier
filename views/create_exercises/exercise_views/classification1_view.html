@@ -1,1 +1,171 @@
-to do
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Pareils ou différents ?</title>
+    <link rel="stylesheet" href="/CSS/style.css">
+    <style>
+        body { font-family: 'Comic Sans MS', sans-serif; text-align: center; background-color: #fdf6c3; }
+        .game-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .images-area { display: flex; justify-content: center; gap: 50px; margin: 70px 0; }
+        .game-img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            padding: 10px;
+            transition: transform 0.2s;
+        }
+        .game-img:hover { transform: scale(1.05); }
+
+        .answers-area { display: flex; justify-content: center; gap: 40px; margin-top: 60px;}
+        .answer-btn {
+            padding: 15px 40px;
+            font-size: 1.5em;
+            background-color: white;
+            border: 3px solid #e67e22;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .answer-btn:hover { transform: scale(1.1); background-color: lightgreen; }
+
+        .answer-btn .symbol {
+            font-size: 2em;
+            display: inline-block;
+            line-height: 1;
+            vertical-align: middle;
+        }
+
+        .feedback { font-size: 2em; margin-top: 20px; font-weight: bold; min-height: 50px; }
+        .correct { color: green; }
+        .wrong { color: red; }
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 25px;
+            background-color: white;
+            border: 3px solid #e67e22;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            color: black;
+            font-weight: bold;
+            font-size: 1.2em;
+            transition: transform 0.1s;
+        }
+        .back-btn:hover {
+            transform: scale(1.1);
+            background-color: #ffeeb0;
+        }
+        .symbol { pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<a href="/classification" class="back-btn">⬅ Retour</a>
+
+<div class="game-container">
+    <h1>Pareils ou différents ?</h1>
+
+    <div class="images-area">
+        <img id="img1" class="game-img" src="" alt="Image 1" onerror="this.style.display='none'">
+        <img id="img2" class="game-img" src="" alt="Image 2" onerror="this.style.display='none'">
+    </div>
+
+    <h2>Les dessins sont-ils pareils ou différents ?<br>Clique sur la bonne réponse :</h2>
+
+    <div class="answers-area">
+        <button class="answer-btn" onclick="checkAnswer(1)">
+            <span class="symbol">=</span>
+        </button>
+        <button class="answer-btn" onclick="checkAnswer(0)">
+            <span class="symbol">≠</span>
+        </button>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+</div>
+
+<script>
+    const levelId = window.location.pathname.split('/').pop();
+    let correctAnswer = null;
+
+    function cleanFileName(name) {
+        if (!name) return "";
+        return name
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .split(' ').join('_');
+    }
+
+    async function initGame() {
+        try {
+            const res = await fetch(`/api/level/${levelId}`);
+            if(!res.ok) throw new Error("Erreur serveur");
+            const levelData = await res.json();
+
+            if (levelData.image1_name) {
+                let name1 = cleanFileName(levelData.image1_name);
+                document.getElementById('img1').src = `/images/shapes/${name1}.png`;
+                document.getElementById('img1').style.display = 'block';
+            }
+
+            if (levelData.image2_name) {
+                let name2 = cleanFileName(levelData.image2_name);
+                document.getElementById('img2').src = `/images/shapes/${name2}.png`;
+                document.getElementById('img2').style.display = 'block';
+            }
+
+            correctAnswer = levelData.correct_answer;
+
+        } catch (e) { console.error("Erreur Init:", e); }
+    }
+
+    async function checkAnswer(choice) {
+        const feedback = document.getElementById('feedback');
+        const studentId = sessionStorage.getItem('currentStudentId');
+
+        if (choice === correctAnswer) {
+            feedback.textContent = "BRAVO !";
+            feedback.className = "feedback correct";
+
+            if(studentId) await saveSuccess(studentId);
+
+            setTimeout(() => { window.location.href = '/classification'; }, 1500);
+        } else {
+            feedback.textContent = "Essaie encore !";
+            feedback.className = "feedback wrong";
+
+            // Enregistrement de l'échec
+            if(studentId) await sendWrongAnswer(studentId, levelId);
+        }
+    }
+
+    async function sendWrongAnswer(studentId, levelId) {
+        try {
+            await fetch('/api/students/progress/fail', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ studentId, levelId })
+            });
+        } catch(e) { console.error("Erreur enregistrement échec", e); }
+    }
+
+    async function saveSuccess(studentId) {
+        try {
+            await fetch('/api/progress', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ studentId, levelId, isSuccess: true })
+            });
+        } catch(e) { console.error("Erreur sauvegarde succès", e); }
+    }
+
+    initGame();
+</script>
+</body>
+</html>

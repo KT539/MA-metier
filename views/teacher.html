@@ -5,12 +5,67 @@
     <title>Espace Enseignant</title>
     <link rel="stylesheet" href="/CSS/style.css">
     <style>
-        /* Petit ajout de style pour le tableau dynamique */
+        /* --- STYLES GÉNÉRAUX --- */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
         th { background-color: #f2f2f2; }
         .status-ok { color: green; font-weight: bold; }
         .status-pending { color: orange; }
+
+        /* --- STYLES MODALE ET BOUTONS --- */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white; margin: 15% auto; padding: 20px;
+            border: 1px solid #888; width: 300px; border-radius: 8px; text-align: center;
+        }
+        .action-btn {
+            cursor: pointer; margin: 0 5px; padding: 5px 10px; border: none;
+            border-radius: 4px; color: white; font-size: 0.9em;
+        }
+        .btn-edit { background-color: #f0ad4e; }
+        .btn-delete { background-color: #d9534f; }
+        .student-grid div { position: relative; }
+
+        /* --- STYLES STATISTIQUES --- */
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+        .stat-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 250px;
+        }
+        .stat-title { font-weight: bold; color: #555; margin-bottom: 10px; display: block; }
+        .stat-value { font-size: 2em; font-weight: bold; color: #333; }
+        .stat-alert { color: #d9534f; }
+        .stat-good { color: #5cb85c; }
+        .progress-bar-bg { background-color: #eee; height: 10px; border-radius: 5px; margin-top: 5px; }
+        .progress-bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s; }
+
+        /* Select pour le filtre */
+        .stats-filter-select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .question-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 0; border-bottom: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
@@ -26,48 +81,74 @@
 
 <div id="dashboard-content" style="display:none;">
 
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+
         <div style="background: #fff; padding: 10px; border: 2px solid #333;">
             <label>Vous souhaitez ajouter un nouvel exercice ?</label>
             <a href="/exercises_creation" class="cat-btn cat-green" id="link-creation-page">Créer un exercice</a>
         </div>
+
+        <h2 id="current-class-title" style="margin: 0;"></h2>
+
         <div style="background: #fff; padding: 10px; border: 2px solid #333;">
             <label>Accès Élèves : </label>
             <button id="toggle-student-btn" class="cat-btn cat-coral" onclick="toggleStudentAccess()">DÉSACTIVÉ</button>
             <a href="/student-area" target="_blank" class="cat-btn cat-green" id="link-student-view" style="display:none;">Ouvrir Vue Élève</a>
         </div>
     </div>
-    <h2 id="current-class-title"></h2>
 
     <h3>Gestion des Élèves</h3>
     <input type="text" id="new-student-name" placeholder="Prénom de l'élève">
     <button onclick="createStudent()">Ajouter Élève</button>
 
-    <div class="student-grid" id="prof-student-grid" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 20px;">
+    <div class="student-grid" id="prof-student-grid" style="display: flex; flex-wrap: wrap; justify-content: center; margin-top: 20px;">
+    </div>
+
+    <h3>Statistiques de la Classe</h3>
+    <div style="margin-bottom: 10px;">
+        <label for="stats-filter"><strong>Afficher les statistiques pour :</strong></label>
+        <select id="stats-filter" class="stats-filter-select" onchange="renderStatsView()">
+            <option value="ALL">Vue d'ensemble (Tous les exercices)</option>
+        </select>
+    </div>
+    <div id="stats-section" class="stats-container">
+        <p>Chargement des statistiques...</p>
     </div>
 
     <h3>Tableau de Progression</h3>
     <table id="progress-table">
-        <thead id="progress-head">
-        </thead>
-        <tbody id="progress-body">
-        </tbody>
+        <thead id="progress-head"></thead>
+        <tbody id="progress-body"></tbody>
     </table>
 </div>
 
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3>Modifier l'élève</h3>
+        <input type="hidden" id="edit-student-id">
+        <label>Nom :</label><br>
+        <input type="text" id="edit-student-name" style="width: 90%; margin-bottom: 10px;"><br>
+        <label>Changer de classe :</label><br>
+        <select id="edit-student-class" style="width: 95%; margin-bottom: 20px;"></select><br>
+        <button onclick="saveStudentEdit()">Enregistrer</button>
+        <button onclick="closeModal()">Annuler</button>
+    </div>
+</div>
+
 <script>
-    const teacherId = localStorage.getItem('teacherId') || 1; // Fallback à 1 pour les tests si pas de login
+    const teacherId = localStorage.getItem('teacherId') || 1;
     let currentClassId = null;
     let currentClassActive = false;
+    let allClasses = [];
+    let currentStatsData = []; // Stockage local des stats
 
-    // ==========================================
-    // 1. GESTION DES CLASSES
-    // ==========================================
-
+    // --- 1. CHARGEMENT DES CLASSES ---
     async function loadClasses() {
         try {
             const res = await fetch(`/api/classes/${teacherId}`);
             const classes = await res.json();
+            allClasses = classes;
+
             const select = document.getElementById('class-select');
             select.innerHTML = '<option value="">Choisir une classe...</option>';
 
@@ -78,60 +159,56 @@
                 opt.dataset.active = c.is_active;
                 select.add(opt);
             });
-        } catch (err) {
-            console.error("Erreur chargement classes:", err);
-        }
+
+            const savedClassId = localStorage.getItem('currentClassId');
+
+            if (savedClassId) {
+                const classExists = classes.some(c => c.id == savedClassId);
+
+                if (classExists) {
+                    select.value = savedClassId;
+                    loadClassData();
+                }
+            }
+        } catch (err) { console.error(err); }
     }
 
     async function createClass() {
         const name = document.getElementById('new-class-name').value;
         if (!name) return;
-
         await fetch('/api/classes', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ name, teacherId })
         });
-
         document.getElementById('new-class-name').value = '';
         loadClasses();
     }
 
-    // Fonction principale appelée quand on change de classe
+    // --- 2. GESTION DASHBOARD & SYNCHRO ---
     async function loadClassData() {
         const select = document.getElementById('class-select');
         currentClassId = select.value;
 
         if(!currentClassId) {
             document.getElementById('dashboard-content').style.display = 'none';
+            localStorage.removeItem('currentClassId');
             return;
         }
+
+        // On écrit dans la mémoire locale pour la vue élève
+        localStorage.setItem('currentClassId', currentClassId);
+
         document.getElementById('dashboard-content').style.display = 'block';
 
-        // 1. Mise à jour titre et bouton
         const selectedOpt = select.options[select.selectedIndex];
         document.getElementById('current-class-title').innerText = selectedOpt.text;
         currentClassActive = (selectedOpt.dataset.active == '1');
         updateToggleButton();
 
-        // 2. Chargement des données
         await loadStudents();
         await loadProgress();
-    }
-
-    async function toggleStudentAccess() {
-        if (!currentClassId) return;
-        currentClassActive = !currentClassActive;
-
-        await fetch(`/api/classes/${currentClassId}/toggle`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ isActive: currentClassActive })
-        });
-
-        const select = document.getElementById('class-select');
-        select.options[select.selectedIndex].dataset.active = currentClassActive ? '1' : '0';
-        updateToggleButton();
+        await loadClassStats();
     }
 
     function updateToggleButton() {
@@ -141,6 +218,7 @@
         if (currentClassActive) {
             btn.textContent = "ACTIVÉ (Cliquer pour fermer)";
             btn.style.backgroundColor = "#90ee90";
+            link.href = "/student-area";
             link.style.display = "inline-block";
         } else {
             btn.textContent = "DÉSACTIVÉ (Cliquer pour ouvrir)";
@@ -149,48 +227,48 @@
         }
     }
 
-    // ==========================================
-    // 2. GESTION DES ÉLÈVES
-    // ==========================================
+    async function toggleStudentAccess() {
+        if (!currentClassId) return;
+        currentClassActive = !currentClassActive;
+        await fetch(`/api/classes/${currentClassId}/toggle`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ isActive: currentClassActive })
+        });
+        updateToggleButton();
+    }
 
+    // --- 3. GESTION ÉLÈVES ---
     async function createStudent() {
         const nameInput = document.getElementById('new-student-name');
         const name = nameInput.value.trim();
+        if (!name || !currentClassId) return alert("Infos manquantes.");
 
-        if (!name) return alert("Veuillez mettre un prénom.");
-        if (!currentClassId) return alert("Aucune classe sélectionnée.");
+        const res = await fetch('/api/students', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ name, classId: currentClassId })
+        });
 
-        try {
-            const res = await fetch('/api/students', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ name, classId: currentClassId })
-            });
-
-            if (res.ok) {
-                nameInput.value = "";
-                loadStudents(); // Recharger la liste pour voir le nouvel élève
-                loadProgress(); // Recharger le tableau aussi (nouvelle ligne)
-            } else {
-                const data = await res.json();
-                alert("Erreur : " + (data.error || "Problème inconnu"));
-            }
-        } catch (err) {
-            console.error(err);
+        if (res.ok) {
+            nameInput.value = "";
+            loadStudents();
+            loadProgress();
+        } else {
+            const err = await res.json();
+            alert(err.error || "Erreur création");
         }
     }
 
     async function loadStudents() {
         if (!currentClassId) return;
-
         const res = await fetch(`/api/students/${currentClassId}`);
         const students = await res.json();
-
         const grid = document.getElementById('prof-student-grid');
         grid.innerHTML = '';
 
         if (students.length === 0) {
-            grid.innerHTML = "<p>Aucun élève dans cette classe.</p>";
+            grid.innerHTML = "<p>Aucun élève.</p>";
             return;
         }
 
@@ -204,108 +282,232 @@
             div.style.backgroundColor = "#f9f9f9";
             div.style.borderRadius = "8px";
 
-            // ATTENTION : On suppose que les images sont dans /public/images/animaux/
-            // et que la DB contient "cochon rose" -> on ajoute .png
-            const nomFichier = s.animal_image.split(' ').join('_');
+            const nomFichier = s.animal_image ? s.animal_image.split(' ').join('_') : 'default';
             const imagePath = `/images/animaux/${nomFichier}.png`;
-            // -------------------------------
+            const safeName = s.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
             div.innerHTML = `
-        <img src="${imagePath}"
-             alt="${s.animal_image}"
-             style="width: 200px; height: 150px; object-fit: contain;">
-        <p style="margin: 5px 0 0 0; font-weight: bold;">${s.name}</p>
-    `;
-
+                <img src="${imagePath}" alt="${s.animal_image}" style="width: 200px; height: 150px; object-fit: contain;">
+                <p style="margin: 5px 0 0 0; font-weight: bold;">${s.name}</p>
+                <div style="margin-top: 10px;">
+                    <button class="action-btn btn-edit" onclick="openEditModal('${s.id}', '${safeName}')">Modif</button>
+                    <button class="action-btn btn-delete" onclick="deleteStudent('${s.id}')">Suppr</button>
+                </div>
+            `;
             grid.appendChild(div);
         });
     }
 
-    // ==========================================
-    // 3. TABLEAU DE PROGRESSION DYNAMIQUE
-    // ==========================================
-
+    // --- 4. PROGRESSION ---
     async function loadProgress() {
         if (!currentClassId) return;
-
-        // 1. Récupérer les données brutes
         const res = await fetch(`/api/students/progress/${currentClassId}`);
         const data = await res.json();
-        // Format reçu : [{name: "Léo", exercise_type: "Classification", exercise_level: 1, is_completed: 1}, ...]
-
         const thead = document.getElementById('progress-head');
         const tbody = document.getElementById('progress-body');
-        thead.innerHTML = '';
-        tbody.innerHTML = '';
+        thead.innerHTML = ''; tbody.innerHTML = '';
 
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="100%">Aucune donnée de progression disponible.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="100%">Pas de progression.</td></tr>';
             return;
         }
 
-        // 2. Extraire la liste unique des exercices pour faire les colonnes
         const exercisesSet = new Set();
         const studentsMap = {};
-
         data.forEach(row => {
-            if (row.exercise_type) {
-                exercisesSet.add(row.exercise_type);
-            }
-
-            // On regroupe les résultats par élève
-            if (!studentsMap[row.name]) {
-                studentsMap[row.name] = {};
-            }
-            // Ex: studentsMap["Léo"]["Classification"] = {level: 1, completed: 1}
-            if (row.exercise_type) {
-                studentsMap[row.name][row.exercise_type] = {
-                    level: row.exercise_level,
-                    completed: row.is_completed
-                };
-            }
+            if(row.exercise_type) exercisesSet.add(row.exercise_type);
+            if(!studentsMap[row.name]) studentsMap[row.name] = {};
+            if(row.exercise_type) studentsMap[row.name][row.exercise_type] = { level: row.exercise_level, completed: row.is_completed };
         });
 
         const exercises = Array.from(exercisesSet).sort();
-
-        // 3. Créer l'en-tête du tableau
         let headerRow = '<tr><th>Élève</th>';
-        exercises.forEach(exName => {
-            headerRow += `<th>${exName}</th>`;
-        });
-        headerRow += '</tr>';
-        thead.innerHTML = headerRow;
+        exercises.forEach(ex => headerRow += `<th>${ex}</th>`);
+        thead.innerHTML = headerRow + '</tr>';
 
-        // 4. Créer les lignes du tableau (Une par élève)
-        // On récupère aussi les élèves sans progression (via loadStudents si besoin,
-        // mais ici on se base sur le retour de la requête progress qui fait un LEFT JOIN)
-        // Note : Le LEFT JOIN assure qu'on a tous les élèves, même ceux avec exercise_type NULL
-
-        // On recrée une liste unique de tous les élèves trouvés dans data
-        const allStudentNames = [...new Set(data.map(d => d.name))];
-
-        allStudentNames.forEach(studentName => {
-            let rowHtml = `<tr><td>${studentName}</td>`;
-
-            exercises.forEach(exName => {
-                const prog = studentsMap[studentName][exName];
-
-                if (prog) {
-                    if (prog.completed) {
-                        rowHtml += `<td class="status-ok">Niv ${prog.level} ✅</td>`;
-                    } else {
-                        rowHtml += `<td class="status-pending">Niv ${prog.level} ⏳</td>`;
-                    }
-                } else {
-                    rowHtml += `<td>-</td>`;
-                }
+        const names = [...new Set(data.map(d => d.name))];
+        names.forEach(name => {
+            let row = `<tr><td>${name}</td>`;
+            exercises.forEach(ex => {
+                const p = studentsMap[name][ex];
+                if(p) row += p.completed ? `<td class="status-ok">Niv ${p.level} ✅</td>` : `<td class="status-pending">Niv ${p.level} ⏳</td>`;
+                else row += `<td>-</td>`;
             });
-
-            rowHtml += '</tr>';
-            tbody.innerHTML += rowHtml;
+            tbody.innerHTML += row + '</tr>';
         });
     }
 
-    // Lancement au démarrage
+    // --- 5. STATISTIQUES AVEC FILTRE ---
+    async function loadClassStats() {
+        if (!currentClassId) return;
+        const container = document.getElementById('stats-section');
+        const selectFilter = document.getElementById('stats-filter');
+
+        try {
+            const res = await fetch(`/api/classes/${currentClassId}/stats`);
+            currentStatsData = await res.json(); // Données brutes (Exercice + Level)
+
+            if (currentStatsData.length === 0) {
+                container.innerHTML = '<p>Pas assez de données pour afficher les statistiques.</p>';
+                return;
+            }
+
+            // 1. "Peupler" le menu déroulant
+            const exercises = [...new Set(currentStatsData.map(d => d.exercise_name))].sort();
+            selectFilter.innerHTML = '<option value="ALL">Vue d\'ensemble (Tous les exercices)</option>';
+            exercises.forEach(ex => {
+                const opt = document.createElement('option');
+                opt.value = ex;
+                opt.textContent = ex;
+                selectFilter.add(opt);
+            });
+
+            // 2. Afficher la vue par défaut
+            renderStatsView();
+
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = '<p>Erreur lors du chargement des statistiques.</p>';
+        }
+    }
+
+    function renderStatsView() {
+        const filterVal = document.getElementById('stats-filter').value;
+        const container = document.getElementById('stats-section');
+
+        // --- MODE VUE D'ENSEMBLE ---
+        if (filterVal === "ALL") {
+            let totalSuccess = 0, totalFailure = 0;
+            // On regroupe par Exercice pour trouver les plus difficiles
+            const exerciseMap = {};
+
+            currentStatsData.forEach(d => {
+                const s = parseInt(d.successes), f = parseInt(d.failures);
+                totalSuccess += s; totalFailure += f;
+
+                if (!exerciseMap[d.exercise_name]) exerciseMap[d.exercise_name] = {s:0, f:0};
+                exerciseMap[d.exercise_name].s += s;
+                exerciseMap[d.exercise_name].f += f;
+            });
+
+            const totalAttempts = totalSuccess + totalFailure;
+            const globalRate = totalAttempts > 0 ? ((totalSuccess / totalAttempts) * 100).toFixed(1) : 0;
+
+            // Identifier exercices difficiles (seuil défini à <60%)
+            let difficultHtml = '';
+            const diffEx = [];
+            for (const [name, counts] of Object.entries(exerciseMap)) {
+                const tot = counts.s + counts.f;
+                const rate = tot > 0 ? (counts.s / tot) * 100 : 0;
+                if (rate < 60 && tot > 0) diffEx.push({name, rate: rate.toFixed(1)});
+            }
+
+            if (diffEx.length > 0) {
+                difficultHtml = '<ul>' + diffEx.map(d => `<li><strong>${d.name}</strong> : <span class="stat-alert">${d.rate}%</span></li>`).join('') + '</ul>';
+            } else {
+                difficultHtml = '<p class="stat-good">Aucun exercice problématique ! 🎉</p>';
+            }
+
+            // Construction des cartes
+            container.innerHTML = `
+                <div class="stat-card">
+                    <span class="stat-title">Taux de réussite global</span>
+                    <div class="stat-value ${globalRate >= 50 ? 'stat-good' : 'stat-alert'}">${globalRate}%</div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${globalRate}%; background-color: ${globalRate >= 50 ? '#5cb85c' : '#d9534f'};"></div></div>
+                    <p style="font-size: 0.9em; color: #777; margin-top: 5px;">${totalAttempts} tentatives</p>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-title">Exercices à surveiller (Moyenne < 60%)</span>
+                    ${difficultHtml}
+                </div>
+            `;
+        }
+        // --- MODE DÉTAIL PAR EXERCICE ---
+        else {
+            const exerciseData = currentStatsData.filter(d => d.exercise_name === filterVal);
+
+            // On suppose que les données sont triées par level_id ascendant grâce au SQL
+            // On va générer une liste de questions (niveaux)
+            let detailsHtml = '<div style="max-height: 300px; overflow-y: auto;">';
+
+            // Compteur local pour afficher "Question 1, Question 2..."
+            let questionCounter = 1;
+
+            exerciseData.forEach(d => {
+                const s = parseInt(d.successes);
+                const f = parseInt(d.failures);
+                const tot = s + f;
+                const rate = tot > 0 ? Math.round((s/tot)*100) : 0;
+
+                // Couleur bar
+                const color = rate >= 60 ? '#5cb85c' : (rate >= 40 ? '#f0ad4e' : '#d9534f');
+
+                detailsHtml += `
+                    <div class="question-row">
+                        <div style="flex: 1;"><strong>Question ${questionCounter}</strong> <span style="font-size:0.8em; color:#888;">(Niv ${d.level_id})</span></div>
+                        <div style="flex: 2; margin: 0 10px;">
+                            <div class="progress-bar-bg" style="height: 15px; margin-top:0;">
+                                <div class="progress-bar-fill" style="width: ${rate}%; background-color: ${color};"></div>
+                            </div>
+                        </div>
+                        <div style="width: 50px; text-align: right; font-weight: bold;">${rate}%</div>
+                    </div>
+                `;
+                questionCounter++;
+            });
+            detailsHtml += '</div>';
+
+            container.innerHTML = `
+                <div class="stat-card" style="flex: 2;">
+                    <span class="stat-title">Détail par Question : ${filterVal}</span>
+                    <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Performance de la classe sur chaque niveau de cet exercice.</p>
+                    ${detailsHtml}
+                </div>
+            `;
+        }
+    }
+
+    // --- 6. EDIT / DELETE ---
+    function openEditModal(id, name) {
+        document.getElementById('edit-student-id').value = id;
+        document.getElementById('edit-student-name').value = name;
+        const select = document.getElementById('edit-student-class');
+        select.innerHTML = '';
+        allClasses.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id; opt.text = c.name;
+            if(c.id == currentClassId) opt.selected = true;
+            select.add(opt);
+        });
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+    window.onclick = function(e) { if(e.target == document.getElementById('editModal')) closeModal(); }
+
+    async function saveStudentEdit() {
+        const id = document.getElementById('edit-student-id').value;
+        const name = document.getElementById('edit-student-name').value;
+        const newClassId = document.getElementById('edit-student-class').value;
+        try {
+            const res = await fetch(`/api/students/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, classId: newClassId })
+            });
+            if(res.ok) { closeModal(); loadStudents(); loadProgress(); }
+        } catch(e) { console.error(e); }
+    }
+
+    async function deleteStudent(id) {
+        if(!confirm("Supprimer l'élève ?")) return;
+        try {
+            const res = await fetch(`/api/students/${id}`, { method: 'DELETE' });
+            if(res.ok) { loadStudents(); loadProgress(); }
+        } catch(e) { console.error(e); }
+    }
+
     loadClasses();
 </script>
 </body>

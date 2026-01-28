@@ -52,6 +52,8 @@ h1 {
     border: 2px solid #333;
     border-radius: 10px;
     text-decoration: none;
+    width: 100%;
+    max-width: 320px;
     color: black;
     background-color: #ffb347;
     font-weight: bold;

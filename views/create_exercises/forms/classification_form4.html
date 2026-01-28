@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuration - Sur la pile</title>
+    <link rel="stylesheet" href="/CSS/classification_form.css">
+    <style>
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 8px;
+            background: #fff;
+        }
+        .img-choice {
+            border: 2px solid #eee;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 8px;
+            text-align: center;
+            background: #f9f9f9;
+            transition: all 0.2s;
+        }
+        .img-choice:hover {
+            transform: translateY(-2px);
+            border-color: #bbb;
+        }
+        .img-choice.selected {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+            box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3);
+        }
+        .img-choice img {
+            width: 100%;
+            height: 80px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+        .img-choice span {
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            color: #555;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a href = '/create_exercises/classification_exercises' class="arrow" title="Retour"></a>
+
+    <h1>Configuration : Sur la pile</h1>
+    <p class="category-label">Le but : vider les cartes de gauche en les posant sur la pile si elles ont un point commun.</p>
+
+    <form id="exercise-config-form">
+        <div class="form-group">
+            <label for="start-image">1. Image de départ (Sur la pile) :</label>
+            <select id="start-image" name="start_image_id" required style="width: 100%; padding: 10px;">
+                <option value="">-- Chargement des images... --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>2. Main du joueur (Sélectionnez plusieurs images) :</label>
+            <div class="image-grid" id="hand-grid">
+            </div>
+        </div>
+
+        <button type="submit" class="cat-btn cat-orange">Créer le niveau</button>
+    </form>
+</div>
+
+<script>
+    // 1. Convertit "carré bleu" en "carre_bleu.png"
+    function formatFileName(name) {
+        if (!name) return '';
+        return name
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Enlève les accents
+                .trim()
+                .replace(/\s+/g, '_') // Remplace espaces par _
+                .toLowerCase()        // Minuscule
+            + '.png';             // Extension
+    }
+
+    // 2. Construit le chemin complet /images/shapes/carre_bleu.png
+    function getCleanImagePath(dbPath, fileName) {
+        // Dossier par défaut si la BDD ne renvoie pas de chemin
+        let path = dbPath || 'public/images/shapes';
+
+        // Nettoyage pour le web : on enlève 'public'
+        let cleanPath = path.replace('public', '');
+
+        // On s'assure des slashs
+        if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+        if (!cleanPath.endsWith('/')) cleanPath += '/';
+
+        return cleanPath + fileName;
+    }
+
+    document.addEventListener("DOMContentLoaded", async function() {
+        const selectStart = document.getElementById('start-image');
+        const gridContainer = document.getElementById('hand-grid');
+
+        try {
+            const response = await fetch('/api/shapes-images');
+            if (!response.ok) throw new Error("Erreur réseau");
+
+            const loadedImages = await response.json();
+
+            // Vider le select et mettre l'option par défaut
+            selectStart.innerHTML = '<option value="">-- Choisir l\'image de départ --</option>';
+
+            if (loadedImages.length === 0) {
+                gridContainer.innerHTML = "<p>Aucune image trouvée.</p>";
+                return;
+            }
+
+            loadedImages.forEach(img => {
+                // Transformation du nom pour correspondre au fichier physique
+                const fileName = formatFileName(img.name);
+                const imgSrc = getCleanImagePath(img.path, fileName);
+
+                // --- 1. Remplir le Menu Déroulant (Pile) ---
+                const option = document.createElement('option');
+                option.value = img.id;
+                option.textContent = img.name; // Nom lisible ("carré bleu")
+                selectStart.appendChild(option);
+
+                // --- 2. Remplir la Grille (Main) ---
+                const div = document.createElement('div');
+                div.className = 'img-choice';
+                div.dataset.id = img.id;
+
+                // On ajoute un gestionnaire d'erreur sur l'image pour éviter les carrés brisés
+                div.innerHTML = `
+                    <img src="${imgSrc}" alt="${img.name}" onerror="this.onerror=null; this.src='/images/placeholder.png';">
+                    <span>${img.name}</span>
+                `;
+
+                // Clic pour sélectionner
+                div.onclick = () => div.classList.toggle('selected');
+
+                gridContainer.appendChild(div);
+            });
+
+        } catch (error) {
+            console.error("Erreur chargement images:", error);
+            gridContainer.innerHTML = `<p style='color:red'>Erreur : ${error.message}</p>`;
+            selectStart.innerHTML = '<option>Erreur de chargement</option>';
+        }
+    });
+
+    document.getElementById('exercise-config-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const startId = document.getElementById('start-image').value;
+        const selected = document.querySelectorAll('.img-choice.selected');
+        const handIds = Array.from(selected).map(div => parseInt(div.dataset.id));
+
+        if (!startId || handIds.length === 0) {
+            alert("Sélectionnez une image pour la pile ET au moins une image pour la main.");
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/create/classification4', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ startImageId: parseInt(startId), handImageIds: handIds })
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                alert("Niveau créé avec succès !");
+                window.location.href = '/exercises_creation';
+            } else {
+                alert("Erreur serveur : " + (result.error || "Inconnue"));
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Impossible de contacter le serveur.");
+        }
+    });
+</script>
+</body>
+</html>

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
 import classRoutes from './src/routes/classes.js';
 import studentRoutes from './src/routes/students.js'
-import {getShapesImages, createLevel, getLevelsByExerciseName, getCategories, getExerciseIdByName, getLevelById, saveProgress} from './database/LinkWithDatabaseSql.js';
+import {getShapesImages, createLevel, createLevel2, getLevelsByExerciseName, getCategories, getExerciseIdByName, getLevelById, saveProgress, createLevelPile, getLevelPileById} from './database/LinkWithDatabaseSql.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -64,6 +64,14 @@ app.get('/create_exercises/forms/classification_form2', (req, res) => {
     res.sendFile(__dirname + '/views/create_exercises/forms/classification_form2.html');
 });
 
+app.get('/create_exercises/forms/classification_form3', (req, res) => {
+    res.sendFile(__dirname + '/views/create_exercises/forms/classification_form3.html');
+});
+
+app.get('/create_exercises/forms/classification_form4', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/create_exercises/forms/classification_form4.html'));
+});
+
 app.get('/api/shapes-images', async (req, res) => {
     try {
         const images = await getShapesImages();
@@ -84,7 +92,45 @@ app.get('/api/exercises/:name/levels', async (req, res) => {
     }
 });
 
-// --- API ROUTES AJOUTÉES ---
+// Route pour afficher la page de jeu classification1
+app.get('/play/classification1/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/create_exercises/exercise_views/classification1_view.html'));
+});
+
+// Sauvegarder un niveau "Pareils ou différents ?" (Classification 1)
+app.post('/api/create/classification1', async (req, res) => {
+    try {
+        // correctAnswer : 1 pour "Pareils (=)", 0 pour "Différents (≠)"
+        const { image1Id, image2Id, correctAnswer } = req.body;
+
+        // Récupérer l'ID de l'exercice
+        const exerciseId = await getExerciseIdByName("Pareils ou différents ?");
+
+        // Récupérer l'ID de la catégorie "Classification"
+        const categories = await getCategories();
+        const classificationCat = categories.find(c => c.name === 'Classification');
+
+        if (!exerciseId || !classificationCat) {
+            return res.status(500).json({
+                error: "Configuration BDD manquante (Exercice 'Pareils ou différents ?' ou Catégorie 'Classification')"
+            });
+        }
+
+        // Création du niveau
+        const newLevelId = await createLevel(
+            exerciseId,
+            classificationCat.id,
+            image1Id,
+            image2Id,
+            correctAnswer
+        );
+
+        res.json({ success: true, id: newLevelId });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Erreur création niveau classification 1" });
+    }
+});
 
 // 1. Récupérer les catégories pour le formulaire
 app.get('/api/categories', async (req, res) => {
@@ -145,6 +191,88 @@ app.post('/api/progress', async (req, res) => {
 app.get('/play/classification2/:id', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/create_exercises/exercise_views/classification2_view.html'));
 });
+
+// --- ROUTE CRÉATION EXERCICE 4 ---
+app.post('/api/create/classification4', async (req, res) => {
+    try {
+        // handImageIds doit être un tableau d'IDs
+        const { startImageId, handImageIds } = req.body;
+
+        const exerciseId = await getExerciseIdByName("Sur la pile");
+        const categories = await getCategories();
+        const classificationCat = categories.find(c => c.name === 'Classification');
+
+        if (!exerciseId || !classificationCat) {
+            return res.status(500).json({ error: "Config BDD manquante" });
+        }
+
+        const newLevelId = await createLevelPile(
+            exerciseId,
+            classificationCat.id,
+            startImageId,
+            handImageIds
+        );
+
+        res.json({ success: true, id: newLevelId });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// --- ROUTE JEU EXERCICE 4 ---
+// Sert la page HTML
+app.get('/play/classification4/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/create_exercises/exercise_views/classification4_view.html'));
+});
+
+// Sert les données JSON pour le JS du jeu
+app.get('/api/exercises/classification4/:id', async (req, res) => {
+    try {
+        const data = await getLevelPileById(req.params.id);
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+
+app.get('/play/classification3/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/create_exercises/exercise_views/classification3_view.html'));
+});
+
+app.post('/api/create/classification3', async (req, res) => {
+    try {
+        // Extract names exactly as they are sent from your HTML/JS
+        const { 
+            exercise_id, 
+            category_id, 
+            image_id_1, 
+            image_id_2, 
+            image_id_3, 
+            image_id_4, 
+            correct_answer 
+        } = req.body;
+
+        // Call your database function
+        const newLevelId = await createLevel2(
+            exercise_id, 
+            category_id, 
+            image_id_1, 
+            image_id_2, 
+            image_id_3, 
+            image_id_4, 
+            correct_answer
+        );
+
+        console.log(`Classification 3 created: ID ${newLevelId}`);
+        res.json({ success: true, id: newLevelId });
+    } catch (e) {
+        console.error("Save Error:", e);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
+});
+
 
 // --- API ROUTES ---
 // On utilise les fichiers créés dans src/routes
