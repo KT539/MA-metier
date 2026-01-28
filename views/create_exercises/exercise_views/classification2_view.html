@@ -61,18 +61,25 @@
 <a href="/classification" class="back-btn">⬅ Retour</a>
 
 <div class="game-container">
-    <h1>Quel est le point commun ?</h1>
+
+    <button class="speak-btn" onclick="speak('question')">
+        <span class="speaker-emoji">🔊</span> 
+    </button>
+    <h1 id="question">Quel est le point commun ?</h1>
 
     <div class="images-area">
         <img id="img1" class="game-img" src="" alt="Image 1" onerror="this.style.display='none'">
         <img id="img2" class="game-img" src="" alt="Image 2" onerror="this.style.display='none'">
     </div>
 
-    <h2>Choisis la bonne réponse :</h2>
+    <button class="speak-btn" onclick="speak('instruction'),speak('ans-forme'),speak('ans-couleur')">
+        <span class="speaker-emoji">🔊</span> 
+    </button>
+    <h2 id="instruction">Choisis la bonne réponse :</h2>
 
     <div class="answers-area">
-        <button class="answer-btn" onclick="checkAnswer(0)">Forme</button>
-        <button class="answer-btn" onclick="checkAnswer(1)">Couleur</button>
+        <button class="answer-btn" onclick="checkAnswer(0)" id="ans-forme">Forme</button>
+        <button class="answer-btn" onclick="checkAnswer(1)" id="ans-couleur">Couleur</button>
     </div>
 
     <div id="feedback" class="feedback"></div>
@@ -159,6 +166,31 @@
     }
 
     initGame();
+
+    const synth = window.speechSynthesis;
+
+    function speak(elementId) {
+        // 1. Check if the browser is already speaking
+        if (synth.speaking) {
+            console.log("Speech synthesis is already in progress...");
+            return; // Exit the function so it doesn't queue another one
+        }
+
+        const element = document.getElementById(elementId);
+        
+        if (element) {
+            const utterance = new SpeechSynthesisUtterance(element.textContent);
+            
+            // Optional: Set the language to match your content
+            utterance.lang = 'fr-FR'; 
+
+            synth.speak(utterance);
+        } else {
+            console.error("Could not find element with ID:", elementId);
+        }
+    }
+
+
 </script>
 </body>
 </html>
