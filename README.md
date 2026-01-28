@@ -20,5 +20,5 @@
 - Lancer le script SQL dans un client SQL pour créer la base de données.
 - Lancer un environnement de développement, initialiser Git-Flow et se positionner sur la branche develop.
 - Saisir la commande npm install dans la console.
-- Saisir la commande npm run dev dans la console pour lancer le serveur de développement.
+- Saisir la commande node app.js pour lancer le serveur Node, ou la commande npm run dev pour lancer le serveur de développement avec nodemon.
 - Le site est maintenant accessible sur le port 3000.
