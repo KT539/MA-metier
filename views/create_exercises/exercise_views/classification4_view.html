@@ -136,6 +136,8 @@
             document.getElementById('msg').style.color = "orange";
             // Enregistrement de l'échec
             sendWrongAnswer(studentId, levelId);
+            setTimeout(() => {
+                window.location.href = '/classification'; }, 2500);
         }
     }
 
